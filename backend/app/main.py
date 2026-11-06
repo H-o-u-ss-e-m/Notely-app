@@ -80,15 +80,18 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-# Configuration CORS — source unique de vérité sans allow_origin_regex (SEC-7)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Client-Version"],
-    max_age=3600,
-)
+# Configuration CORS — En dev, autorise tous les ports locaux (Flutter Web/Edge, Angular)
+cors_kwargs = {
+    "allow_origins": settings.CORS_ORIGINS,
+    "allow_credentials": True,
+    "allow_methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    "allow_headers": ["*"],
+    "max_age": 3600,
+}
+if settings.ENV == "dev":
+    cors_kwargs["allow_origin_regex"] = r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$"
+
+app.add_middleware(CORSMiddleware, **cors_kwargs)
 
 # Limite de taille des corps de requête (anti-DoS)
 app.add_middleware(BodySizeLimitMiddleware, max_bytes=settings.MAX_REQUEST_BODY_MB * 1024 * 1024)
