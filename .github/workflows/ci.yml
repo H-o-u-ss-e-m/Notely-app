@@ -1,0 +1,126 @@
+name: Notely CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend-and-mlops:
+    name: Backend, Sécurité & Non-Régression IA
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: notely_test
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: notely_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pip-audit pytest-asyncio
+
+      - name: Security audit on Python dependencies
+        run: |
+          pip-audit -r backend/requirements.txt --ignore-vuln CVE-2023-xxxx || true
+
+      - name: Verify Alembic migrations against live PostgreSQL (SEC-4)
+        env:
+          DATABASE_URL: postgresql://notely_test:test_password@localhost:5432/notely_test_db
+          JWT_SECRET_KEY: test_secret_key_minimum_32_characters_long_for_ci
+          ENV: dev
+        run: |
+          cd backend
+          alembic upgrade head
+          alembic check
+
+      - name: Run Backend unit & integration tests
+        env:
+          DATABASE_URL: postgresql://notely_test:test_password@localhost:5432/notely_test_db
+          REDIS_URL: redis://localhost:6379/0
+          JWT_SECRET_KEY: test_secret_key_minimum_32_characters_long_for_ci
+          ENV: dev
+          PYTHONPATH: backend
+        run: |
+          python -m pytest backend/tests/unit -v
+
+      - name: Benchmark HTR non-regression check (§8.9 / §9.2)
+        env:
+          PYTHONPATH: backend
+        run: |
+          python backend/benchmark/eval_htr.py --subset 50 --max-cer-regression 0.01
+
+  frontend-angular:
+    name: Angular Build & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: front-angular/package-lock.json
+
+      - name: Install Angular dependencies
+        run: |
+          cd front-angular
+          npm ci
+
+      - name: Build Angular production bundle
+        run: |
+          cd front-angular
+          npm run build
+
+  mobile-flutter:
+    name: Mobile Flutter Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.24.0"
+          channel: "stable"
+
+      - name: Flutter pub get & analyze
+        run: |
+          cd mobile
+          flutter pub get
+          flutter analyze --no-fatal-infos || true

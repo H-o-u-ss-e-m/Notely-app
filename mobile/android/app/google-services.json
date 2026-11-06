@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "857474923906",
+    "project_id": "ocr-manuscrit-aa019",
+    "storage_bucket": "ocr-manuscrit-aa019.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:857474923906:android:d23c1abf0b0e303ae9e39b",
+        "android_client_info": {
+          "package_name": "com.example.ocr_handwritten_notes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqj0l-aeUT-Nf6C_41Y6nSoaS5HzWW5YE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

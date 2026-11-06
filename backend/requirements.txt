@@ -1,0 +1,52 @@
+# ── Serveur & API ─────────────────────────────────────────────────────────────
+fastapi>=0.100.0,<1.0.0
+uvicorn[standard]>=0.22.0,<0.35.0
+
+# ── Machine Learning ──────────────────────────────────────────────────────────
+# IMPORTANT : transformers<5 — la v5 supprime le pipeline image-to-text
+# qui pourrait être utilisé dans des scripts tiers. Épingler jusqu'à validation.
+torch>=2.0.0,<3.0.0
+transformers>=4.30.0,<5.0.0
+torchvision>=0.15.0,<1.0.0
+
+# ── Traitement image ──────────────────────────────────────────────────────────
+pillow>=9.5.0,<12.0.0
+opencv-python>=4.7.0.72,<5.0.0
+
+# ── Calcul numérique ──────────────────────────────────────────────────────────
+numpy>=1.24.0,<3.0.0
+scikit-learn>=1.2.0,<2.0.0
+
+# ── Validation & configuration ────────────────────────────────────────────────
+pydantic>=2.0.0,<3.0.0
+pydantic-settings>=2.0.0,<3.0.0
+python-dotenv>=1.0.0,<2.0.0
+
+# ── Base de données PostgreSQL ────────────────────────────────────────────────
+sqlalchemy>=2.0.0,<3.0.0
+psycopg2-binary>=2.9.0,<3.0.0
+alembic>=1.11.0,<2.0.0
+
+# ── Authentification ──────────────────────────────────────────────────────────
+bcrypt>=4.0.0,<5.0.0
+python-jose[cryptography]>=3.3.0,<4.0.0
+
+# ── Export PDF ────────────────────────────────────────────────────────────────
+reportlab>=4.0.0,<5.0.0
+
+# ── Files de tâches asynchrones & Cache (ARCH-2 / ML-12a) ────────────────────
+celery[redis]>=5.3.0,<6.0.0
+redis>=4.5.0,<6.0.0
+
+# ── Surveillance & Métriques (MLOps / §9.3) ──────────────────────────────────
+prometheus-client>=0.17.0,<1.0.0
+pyyaml>=6.0.0,<7.0.0
+
+# ── Tests ─────────────────────────────────────────────────────────────────────
+pytest>=7.3.0,<9.0.0
+httpx>=0.24.0,<1.0.0
+
+# ── Benchmark HTR ─────────────────────────────────────────────────────────────
+# jiwer : alternative pour CER/WER si on veut comparer avec la librairie standard
+# (notre metrics.py Python pur reste utilisable sans cette dépendance)
+jiwer>=3.0.0,<4.0.0

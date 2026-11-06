@@ -1,0 +1,119 @@
+[
+  {
+    "engine": "trocr-1beams",
+    "n": 20,
+    "CER": 0.1516,
+    "WER": 0.4711,
+    "accent_error_rate": 1.0,
+    "empty_rate": 0.0,
+    "latency_mean_s": 2.064,
+    "latency_max_s": 2.946,
+    "latency_total_s": 41.272,
+    "by_language": {
+      "fr": {
+        "CER": 0.1661,
+        "WER": 0.5595,
+        "n": 14
+      },
+      "en": {
+        "CER": 0.1166,
+        "WER": 0.2703,
+        "n": 6
+      }
+    },
+    "by_category": {
+      "text": {
+        "CER": 0.1212,
+        "WER": 0.4048,
+        "n": 13
+      },
+      "title": {
+        "CER": 0.1583,
+        "WER": 0.4,
+        "n": 4
+      },
+      "list": {
+        "CER": 0.141,
+        "WER": 0.8,
+        "n": 2
+      },
+      "formula": {
+        "CER": 0.95,
+        "WER": 1.0,
+        "n": 1
+      }
+    },
+    "errors_sample": [
+      {
+        "image": "l0001.png",
+        "ref": "Les fonctions dérivables sont continues",
+        "hyp": "Les functions derivables sent continues 2 3",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0002.png",
+        "ref": "Une intégrale indéfinie est une primitive",
+        "hyp": "Une integrale indefinie est une primitive 1882",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0003.png",
+        "ref": "Théorème des accroissements finis",
+        "hyp": "Theoreme des accroissements finis 1882",
+        "language": "fr",
+        "category": "title"
+      },
+      {
+        "image": "l0004.png",
+        "ref": "Le déterminant de la matrice est nul",
+        "hyp": "Le determinant de la matrice est nul 1882",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0005.png",
+        "ref": "Soit f une fonction continue sur [a, b]",
+        "hyp": "Soit f une function continue sur la , b )000",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0006.png",
+        "ref": "Calcul de la dérivée première de g(x)",
+        "hyp": "Calcul de la derives premiere de glx ) 3 .",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0007.png",
+        "ref": "L'élève a résolu l'équation différentielle",
+        "hyp": "L'eieve a resolu l'equation differentielle 1882",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0008.png",
+        "ref": "Méthode d'Euler et approximations",
+        "hyp": "Methode d'Euler et approximations 1882",
+        "language": "fr",
+        "category": "title"
+      },
+      {
+        "image": "l0009.png",
+        "ref": "La suite converge vers une limite finie",
+        "hyp": "La suite converge vers une limite finie 1882",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0010.png",
+        "ref": "Étude des variations et tableau de signes",
+        "hyp": "Etude des variations et tableau de signes 1 .",
+        "language": "fr",
+        "category": "text"
+      }
+    ]
+  }
+]

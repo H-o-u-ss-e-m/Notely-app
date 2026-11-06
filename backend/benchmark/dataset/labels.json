@@ -1,0 +1,1602 @@
+[
+  {
+    "image": "l0001.png",
+    "text": "Les fonctions dérivables sur un intervalle ouvert sont continues",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0002.png",
+    "text": "Une intégrale indéfinie représente l'ensemble des primitives",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0003.png",
+    "text": "Théorème des accroissements finis et corollaires",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0004.png",
+    "text": "Soit f une fonction continue et strictement monotone sur [a, b]",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0005.png",
+    "text": "Calcul de la dérivée première de la fonction logarithme népérien",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0006.png",
+    "text": "La limite de sin(x)/x lorsque x tend vers zéro est égale à un",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0007.png",
+    "text": "Le développement limité à l'ordre trois au voisinage de zéro",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0008.png",
+    "text": "Toute suite réelle croissante et majorée converge vers sa borne supérieure",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_001"
+  },
+  {
+    "image": "l0009.png",
+    "text": "Théorème de Bolzano-Weierstrass pour les suites bornées",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0010.png",
+    "text": "Étude de la convexité d'une fonction deux fois dérivable",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0011.png",
+    "text": "Points d'inflexion et signe de la dérivée seconde",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0012.png",
+    "text": "L'intégrale de Riemann d'une fonction continue par morceaux",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0013.png",
+    "text": "Intégration par parties et changement de variable",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0014.png",
+    "text": "La série harmonique est divergente malgré la décroissance de son terme",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0015.png",
+    "text": "Rayon de convergence d'une série entière complexe",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0016.png",
+    "text": "Le déterminant d'une matrice carrée d'ordre n",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_002"
+  },
+  {
+    "image": "l0017.png",
+    "text": "Système d'équations linéaires et méthode du pivot de Gauss",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0018.png",
+    "text": "Les valeurs propres sont les racines du polynôme caractéristique",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0019.png",
+    "text": "Diagonalisation d'une matrice symétrique réelle",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0020.png",
+    "text": "Espace vectoriel de dimension finie muni d'une base orthonormée",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0021.png",
+    "text": "Le produit scalaire canonique sur l'espace euclidien",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0022.png",
+    "text": "Noyau et image d'une application linéaire continue",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0023.png",
+    "text": "Théorème du rang pour les morphismes d'espaces vectoriels",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0024.png",
+    "text": "Sous-espace supplémentaire et projection orthogonale",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_003"
+  },
+  {
+    "image": "l0025.png",
+    "text": "Inégalité de Cauchy-Schwarz dans un espace préhilbertien",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0026.png",
+    "text": "Principe fondamental de la dynamique newtonienne",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0027.png",
+    "text": "L'énergie cinétique d'un solide en mouvement de translation",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0028.png",
+    "text": "Conservation de l'énergie mécanique en l'absence de frottements",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0029.png",
+    "text": "Oscillateur harmonique amorti en régime pseudopériodique",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0030.png",
+    "text": "Équations de Maxwell dans le vide et propagation des ondes",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0031.png",
+    "text": "Champ électrostatique créé par une distribution sphérique de charges",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0032.png",
+    "text": "Loi d'Ohm généralisée et circuits électriques en courant alternatif",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_004"
+  },
+  {
+    "image": "l0033.png",
+    "text": "Premier principe de la thermodynamique pour un système fermé",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0034.png",
+    "text": "Variation d'entropie au cours d'une transformation irréversible",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0035.png",
+    "text": "Cycle de Carnot et rendement maximal d'une machine thermique",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0036.png",
+    "text": "Réaction acido-basique et constante d'acidité en solution aqueuse",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0037.png",
+    "text": "Cinétique chimique et ordre global d'une réaction élémentaire",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0038.png",
+    "text": "Structure de la molécule d'acide désoxyribonucléique",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0039.png",
+    "text": "Synthèse des protéines par les ribosomes dans le cytoplasme",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0040.png",
+    "text": "Équilibre d'oxydoréduction et potentiel standard d'électrode",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_005"
+  },
+  {
+    "image": "l0041.png",
+    "text": "1. Définition rigoureuse de la dérivabilité en un point",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0042.png",
+    "text": "2. Propriétés algébriques de la dérivée d'une somme",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0043.png",
+    "text": "3. Règle de dérivation d'une fonction composée f(g(x))",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0044.png",
+    "text": "4. Dérivée de la fonction réciproque f^(-1)",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0045.png",
+    "text": "5. Applications à l'optimisation et extrema locaux",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0046.png",
+    "text": "a) Hypothèse de départ : f est de classe C1 sur l'intervalle",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0047.png",
+    "text": "b) Démonstration par l'absurde de l'unicité de la solution",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0048.png",
+    "text": "c) Conclusion générale et interprétation géométrique",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_006"
+  },
+  {
+    "image": "l0049.png",
+    "text": "I. Rappels fondamentaux sur les espaces préhilbertiens",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0050.png",
+    "text": "II. Familles libres, familles génératrices et bases",
+    "language": "fr",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0051.png",
+    "text": "Chapitre 3 : Équations différentielles linéaires du second ordre",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0052.png",
+    "text": "Section 2.4 : Séries de Fourier et phénomènes vibratoires",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0053.png",
+    "text": "Annexe B : Formulaire trigonométrique et hyperbolique",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0054.png",
+    "text": "Exercice 12 : Résolution approchée par la méthode des trapèzes",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0055.png",
+    "text": "Problème de synthèse : Étude d'un pendule simple non linéaire",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0056.png",
+    "text": "Posons delta = b^2 - 4ac le discriminant de l'équation",
+    "language": "fr",
+    "category": "formula",
+    "has_accents": true,
+    "page_group": "pg_007"
+  },
+  {
+    "image": "l0057.png",
+    "text": "L'intégrale de a à b de f(t) dt vaut F(b) - F(a)",
+    "language": "fr",
+    "category": "formula",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0058.png",
+    "text": "Pour tout epsilon strictement supérieur à zéro, il existe un rang N",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0059.png",
+    "text": "La norme euclidienne vérifie ||x + y|| <= ||x|| + ||y||",
+    "language": "fr",
+    "category": "formula",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0060.png",
+    "text": "Relation d'Euler : e^(i*pi) + 1 = 0",
+    "language": "fr",
+    "category": "formula",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0061.png",
+    "text": "L'étudiant a rédigé un mémoire complet sur l'intelligence artificielle",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0062.png",
+    "text": "La reconnaissance automatique de l'écriture manuscrite progresse rapidement",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0063.png",
+    "text": "Chaque élève doit vérifier ses calculs avant de remettre sa copie",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0064.png",
+    "text": "Le professeur a souligné l'importance de la rigueur mathématique",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_008"
+  },
+  {
+    "image": "l0065.png",
+    "text": "Une bonne méthode de travail permet de réussir les épreuves écrites",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0066.png",
+    "text": "L'épreuve comprend trois exercices indépendants et un problème guidé",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0067.png",
+    "text": "L'usage de la calculatrice programmable est strictement interdit",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0068.png",
+    "text": "Rédigez avec soin en précisant les théorèmes invoqués",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0069.png",
+    "text": "La clarté de la rédaction constitue un élément majeur d'évaluation",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0070.png",
+    "text": "Tous les résultats numériques seront arrondis au centième près",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0071.png",
+    "text": "Décomposition en éléments simples d'une fraction rationnelle",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0072.png",
+    "text": "Pôles, résidus et intégration le long d'un lacet fermé",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_009"
+  },
+  {
+    "image": "l0073.png",
+    "text": "Théorème de convergence dominée de Lebesgue",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0074.png",
+    "text": "Espace des fonctions intégrables muni de la norme L1",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0075.png",
+    "text": "Complétude de l'espace vectoriel normé et suites de Cauchy",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0076.png",
+    "text": "Topologie générale : ouverts, fermés, voisinages et compacité",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0077.png",
+    "text": "Le théorème de Heine affirme qu'une fonction continue sur un compact est uniformément continue",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0078.png",
+    "text": "Différentielle d'une fonction de plusieurs variables réelles",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0079.png",
+    "text": "Matrice jacobienne et matrice hessienne d'un champ scalaire",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0080.png",
+    "text": "Gradient, divergence et rotationnel en coordonnées cartésiennes",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_010"
+  },
+  {
+    "image": "l0081.png",
+    "text": "Théorème de Green-Riemann pour une courbe fermée plane",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0082.png",
+    "text": "Flux d'un champ de vecteurs à travers une surface orientée",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0083.png",
+    "text": "Théorème d'Ostrogradski et divergence volumique",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0084.png",
+    "text": "Loi des grands nombres et convergence en probabilité",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0085.png",
+    "text": "Théorème central limite et distribution gaussienne centrée réduite",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0086.png",
+    "text": "Variable aléatoire discrète suivant une loi binomiale de paramètres n et p",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0087.png",
+    "text": "Espérance mathématique et variance d'une variable aléatoire continue",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0088.png",
+    "text": "Estimation ponctuelle et intervalle de confiance bilatéral",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_011"
+  },
+  {
+    "image": "l0089.png",
+    "text": "Test d'hypothèse statistique et risque de première espèce",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0090.png",
+    "text": "Régression linéaire simple et méthode des moindres carrés",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0091.png",
+    "text": "Coefficient de corrélation linéaire de Pearson",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0092.png",
+    "text": "Analyse de la variance à un facteur contrôlé",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0093.png",
+    "text": "Arbre de décision binaire et entropie de Shannon",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0094.png",
+    "text": "Réseaux de neurones convolutifs appliqués à la vision par ordinateur",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0095.png",
+    "text": "Architecture transformeur avec mécanisme d'attention multi-têtes",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0096.png",
+    "text": "Rétropropagation du gradient d'erreur stochastique",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_012"
+  },
+  {
+    "image": "l0097.png",
+    "text": "Normalisation par lots et régularisation par abandon temporaire",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0098.png",
+    "text": "Apprentissage semi-supervisé et auto-encodeurs variationnels",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0099.png",
+    "text": "Traitement automatique des langues naturelles et plongements lexicaux",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0100.png",
+    "text": "Modèles de langage pré-entraînés sur de très grands corpus textuels",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0101.png",
+    "text": "Reconnaissance optique de caractères pour documents anciens numérisés",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0102.png",
+    "text": "Segmentation sémantique d'images de documents historiques",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0103.png",
+    "text": "Binarisation adaptative d'images par la méthode de Sauvola",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0104.png",
+    "text": "Extraction de caractéristiques géométriques et fréquentielles",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_013"
+  },
+  {
+    "image": "l0105.png",
+    "text": "Correction orthographique contextuelle par modèles n-grammes",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0106.png",
+    "text": "Dictionnaire utilisateur personnalisé et mémorisation des corrections",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0107.png",
+    "text": "Génération de résumés automatiques et extraction d'entités nommées",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0108.png",
+    "text": "Modèle de diffusion pour la génération conditionnelle de visages",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0109.png",
+    "text": "Système expert à base de règles et chaînage avant",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0110.png",
+    "text": "Représentation des connaissances et ontologies formelles",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0111.png",
+    "text": "Recherche heuristique dans un graphe d'états par l'algorithme A*",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0112.png",
+    "text": "Complexité algorithmique temporelle et spatiale au pire des cas",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_014"
+  },
+  {
+    "image": "l0113.png",
+    "text": "Tri rapide récursif et analyse probabiliste de la complexité",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0114.png",
+    "text": "Structures de données arborescentes : arbres AVL et arbres rouge-noir",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0115.png",
+    "text": "Tables de hachage avec résolution des collisions par chaînage",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0116.png",
+    "text": "Programmation dynamique pour le problème du sac à dos",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0117.png",
+    "text": "Plus court chemin dans un graphe orienté par l'algorithme de Dijkstra",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0118.png",
+    "text": "Flot maximal dans un réseau par l'algorithme de Ford-Fulkerson",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0119.png",
+    "text": "Classes de complexité P, NP et problèmes NP-complets",
+    "language": "fr",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0120.png",
+    "text": "Machines de Turing et thèse de Church-Turing",
+    "language": "fr",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_015"
+  },
+  {
+    "image": "l0121.png",
+    "text": "The quick brown fox jumps over the lazy dog",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0122.png",
+    "text": "Linear algebra and abstract vector spaces",
+    "language": "en",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0123.png",
+    "text": "Machine learning foundations and deep neural networks",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0124.png",
+    "text": "Continuous functions defined on compact metric spaces",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0125.png",
+    "text": "Differential calculus and multivariate optimization problems",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0126.png",
+    "text": "Principal component analysis for dimensionality reduction",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0127.png",
+    "text": "Support vector machines with radial basis function kernels",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0128.png",
+    "text": "Stochastic gradient descent with momentum and adaptive learning rates",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_016"
+  },
+  {
+    "image": "l0129.png",
+    "text": "Convolutional neural networks for computer vision tasks",
+    "language": "en",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0130.png",
+    "text": "Recurrent neural networks and long short term memory architectures",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0131.png",
+    "text": "Attention mechanisms and transformer based language models",
+    "language": "en",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0132.png",
+    "text": "Self-supervised representation learning from unlabelled images",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0133.png",
+    "text": "Natural language processing for question answering systems",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0134.png",
+    "text": "Markov decision processes and reinforcement learning algorithms",
+    "language": "en",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0135.png",
+    "text": "Bellman optimality equation for dynamic programming",
+    "language": "en",
+    "category": "formula",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0136.png",
+    "text": "1. Define the objective loss function to minimize",
+    "language": "en",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_017"
+  },
+  {
+    "image": "l0137.png",
+    "text": "2. Compute the gradient with respect to model parameters",
+    "language": "en",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0138.png",
+    "text": "3. Update weights using backpropagation rule",
+    "language": "en",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0139.png",
+    "text": "4. Evaluate accuracy on held-out validation dataset",
+    "language": "en",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0140.png",
+    "text": "5. Early stopping criterion when validation loss plateaus",
+    "language": "en",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0141.png",
+    "text": "Let X be a random variable following a normal distribution",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0142.png",
+    "text": "The eigenvalues of a real symmetric matrix are all real",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0143.png",
+    "text": "Singular value decomposition of rectangular matrices",
+    "language": "en",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0144.png",
+    "text": "Bayesian inference and posterior probability estimation",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_018"
+  },
+  {
+    "image": "l0145.png",
+    "text": "Maximum likelihood estimation of unknown parameters",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0146.png",
+    "text": "Central limit theorem under finite variance conditions",
+    "language": "en",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0147.png",
+    "text": "Time series analysis with autoregressive integrated moving average",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0148.png",
+    "text": "Graph neural networks for relational structure modeling",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0149.png",
+    "text": "Optical character recognition pipeline for document layout analysis",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0150.png",
+    "text": "Fast inference engine using dynamic int8 quantization",
+    "language": "en",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0151.png",
+    "text": "الهندسة الإقليدية ونظرية المثلثات في الفضاء",
+    "language": "ar",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0152.png",
+    "text": "حل المعادلة التفاضلية من الدرجة الأولى",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_019"
+  },
+  {
+    "image": "l0153.png",
+    "text": "حساب التكامل المحدود للدوال المستمرة",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0154.png",
+    "text": "الجبر الخطي والمصفوفات والمحددات",
+    "language": "ar",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0155.png",
+    "text": "دراسة الدوال العددية والنهايات والاشتقاق",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0156.png",
+    "text": "الاحتمالات والإحصاء التطبيقي في العلوم",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0157.png",
+    "text": "قوانين نيوتن في الحركة والديناميكا الكلاسيكية",
+    "language": "ar",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0158.png",
+    "text": "الطاقة الحركية وطاقة الوضع للجسم الساقط",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0159.png",
+    "text": "التيار الكهربائي وفرق الجهد والمقاومة",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0160.png",
+    "text": "الكيمياء العضوية وبنية الجزيئات الحيوية",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_020"
+  },
+  {
+    "image": "l0161.png",
+    "text": "١. تعريف الدالة التزايدية بدقة رياضية",
+    "language": "ar",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0162.png",
+    "text": "٢. حساب نقطة الانقلاب لمنحنى الدالة",
+    "language": "ar",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0163.png",
+    "text": "٣. استنتاج جدول التغيرات والرسم البياني",
+    "language": "ar",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0164.png",
+    "text": "٤. تعيين مستقيمات المقاربة الأفقية والعمودية",
+    "language": "ar",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0165.png",
+    "text": "٥. حساب مساحة الحيز المحصور بين المنحنيين",
+    "language": "ar",
+    "category": "list",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0166.png",
+    "text": "المتتاليات العددية المتقاربة ونهاياتها",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0167.png",
+    "text": "مبرهنة القيم المتوسطة وتطبيقاتها الهندسية",
+    "language": "ar",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0168.png",
+    "text": "الأعداد المركبة والشكل المثلثي والقطبي",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_021"
+  },
+  {
+    "image": "l0169.png",
+    "text": "المتجهات في المستوى الإحداثي والجداء السلمي",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0170.png",
+    "text": "الدائرة المثلثية وقيم جيب التمام والظل",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0171.png",
+    "text": "الخوارزميات وهياكل البيانات المتقدمة في الحاسوب",
+    "language": "ar",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0172.png",
+    "text": "الذكاء الاصطناعي وتطبيقات التعلم العميق",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0173.png",
+    "text": "معالجة اللغات الطبيعية والترجمة الآلية الفورية",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0174.png",
+    "text": "التعرف الضوئي على الحروف للنصوص المخطوطة",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0175.png",
+    "text": "أمن المعلومات والتشفير باستخدام المفتاح العام",
+    "language": "ar",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0176.png",
+    "text": "قواعد البيانات العلائقية ولغة الاستعلام الهيكلية",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_022"
+  },
+  {
+    "image": "l0177.png",
+    "text": "نظرية المجموعات والمنطق الرياضي الاستدلالي",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0178.png",
+    "text": "الفضاء الشعاعي والأساس والبعد المنتهي",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0179.png",
+    "text": "تكامل الدوال الكسرية باستخدام الكسور الجزئية",
+    "language": "ar",
+    "category": "text",
+    "has_accents": false,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0180.png",
+    "text": "مراجعة عامة وشاملة للاختبار النهائي في الرياضيات",
+    "language": "ar",
+    "category": "title",
+    "has_accents": false,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0181.png",
+    "text": "Lineare Algebra und mehrdimensionale Analysis",
+    "language": "de",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0182.png",
+    "text": "Die stetigen Funktionen auf kompakten Intervallen",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0183.png",
+    "text": "Berechnung der partiellen Ableitungen zweiter Ordnung",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0184.png",
+    "text": "Differentialgleichungen und Schwingungssysteme",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_023"
+  },
+  {
+    "image": "l0185.png",
+    "text": "Der Mittelwertsatz der Differentialrechnung",
+    "language": "de",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0186.png",
+    "text": "Integration durch Substitution und partielle Integration",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0187.png",
+    "text": "Die Eigenwerte einer symmetrischen Matrix sind reell",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0188.png",
+    "text": "Wahrscheinlichkeitstheorie und mathematische Statistik",
+    "language": "de",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0189.png",
+    "text": "Konvergenz von Reihen und Potenzreihenentwicklung",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0190.png",
+    "text": "Einführung in die theoretische Informatik",
+    "language": "de",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0191.png",
+    "text": "1. Definition der Differenzierbarkeit einer Funktion",
+    "language": "de",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0192.png",
+    "text": "2. Bestimmung der lokalen Extrema und Wendepunkte",
+    "language": "de",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_024"
+  },
+  {
+    "image": "l0193.png",
+    "text": "3. Zeichnen des Funktionsgraphen im Koordinatensystem",
+    "language": "de",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_025"
+  },
+  {
+    "image": "l0194.png",
+    "text": "4. Berechnung der Nullstellen des Polynoms",
+    "language": "de",
+    "category": "list",
+    "has_accents": true,
+    "page_group": "pg_025"
+  },
+  {
+    "image": "l0195.png",
+    "text": "Das Gaußsche Eliminationsverfahren für lineare Gleichungssysteme",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_025"
+  },
+  {
+    "image": "l0196.png",
+    "text": "Die Taylorreihe einer unendlich oft differenzierbaren Funktion",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_025"
+  },
+  {
+    "image": "l0197.png",
+    "text": "Optimierung von Algorithmen zur optischen Zeichenerkennung",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_025"
+  },
+  {
+    "image": "l0198.png",
+    "text": "Künstliche Intelligenz und maschinelles Lernen in der Praxis",
+    "language": "de",
+    "category": "title",
+    "has_accents": true,
+    "page_group": "pg_025"
+  },
+  {
+    "image": "l0199.png",
+    "text": "Automatische Texterkennung für handgeschriebene Vorlesungsnotizen",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_025"
+  },
+  {
+    "image": "l0200.png",
+    "text": "Zusammenfassung der mathematischen Grundlagen für Studierende",
+    "language": "de",
+    "category": "text",
+    "has_accents": true,
+    "page_group": "pg_025"
+  }
+]

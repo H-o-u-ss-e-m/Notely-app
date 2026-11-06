@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "StrokeDataSchema",
+  "description": "Universal JSON representation of digital notebook handwriting strokes shared between Web (Angular) and Mobile (Flutter)",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the stroke"
+    },
+    "points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "timestamp": { "type": "number" },
+          "pressure": { "type": "number", "default": 1.0 }
+        },
+        "required": ["x", "y"]
+      }
+    },
+    "startTime": { "type": "number" },
+    "endTime": { "type": "number" },
+    "color": { "type": "string", "default": "#000000" },
+    "width": { "type": "number", "default": 3.0 },
+    "tool": { "type": "string", "enum": ["pen", "eraser"], "default": "pen" },
+    "pointerType": { "type": "string", "enum": ["mouse", "touch", "pen"], "default": "pen" },
+    "bbox": {
+      "type": "object",
+      "properties": {
+        "xMin": { "type": "number" },
+        "yMin": { "type": "number" },
+        "xMax": { "type": "number" },
+        "yMax": { "type": "number" }
+      },
+      "required": ["xMin", "yMin", "xMax", "yMax"]
+    }
+  },
+  "required": ["id", "points", "startTime", "endTime"]
+}

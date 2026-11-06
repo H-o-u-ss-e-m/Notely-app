@@ -1,0 +1,107 @@
+[
+  {
+    "engine": "trocr-1beams+postprocess",
+    "n": 10,
+    "CER": 0.3736,
+    "WER": 0.7097,
+    "accent_error_rate": 0.6667,
+    "empty_rate": 0.0,
+    "ECE": 0.7026,
+    "latency_mean_s": 3.567,
+    "latency_p50_s": 3.446,
+    "latency_p95_s": 4.611,
+    "latency_max_s": 5.137,
+    "latency_total_s": 35.67,
+    "by_language": {
+      "fr": {
+        "CER": 0.3736,
+        "WER": 0.7097,
+        "n": 10
+      }
+    },
+    "by_category": {
+      "text": {
+        "CER": 0.3805,
+        "WER": 0.7,
+        "n": 8
+      },
+      "title": {
+        "CER": 0.3398,
+        "WER": 0.7692,
+        "n": 2
+      }
+    },
+    "errors_sample": [
+      {
+        "image": "l0001.png",
+        "ref": "Les fonctions dérivables sur un intervalle ouvert sont continues",
+        "hyp": "Les functions dérivables sur un intendlle owvert cont continues to",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0002.png",
+        "ref": "Une intégrale indéfinie représente l'ensemble des primitives",
+        "hyp": "Une intégrale indefinite represents l'ensemble des primitives 1887 1900 1900",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0003.png",
+        "ref": "Théorème des accroissements finis et corollaires",
+        "hyp": "Théorème des accroissements finis et corollaires 1882 1882 1882",
+        "language": "fr",
+        "category": "title"
+      },
+      {
+        "image": "l0004.png",
+        "ref": "Soit f une fonction continue et strictement monotone sur [a, b]",
+        "hyp": "Soit f une function continue at strictement monotone sur la bj 1950 1951 1952 1953 1954",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0005.png",
+        "ref": "Calcul de la dérivée première de la fonction logarithme népérien",
+        "hyp": "Calcul de la derives première de la function logarithme neperien 2000 2001 2002 2003",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0006.png",
+        "ref": "La limite de sin(x)/x lorsque x tend vers zéro est égale à un",
+        "hyp": "La limite de sinklix lorsque x tend vers zero estegale a un 1000 000 000 000",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0007.png",
+        "ref": "Le développement limité à l'ordre trois au voisinage de zéro",
+        "hyp": "Le development limits a l'ordre trois au voisinage de zero 2500300030003000",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0008.png",
+        "ref": "Toute suite réelle croissante et majorée converge vers sa borne supérieure",
+        "hyp": "' Toute suite réelle croissante et majoriee converge vers sa borne suphireure 1882 1882 1882 1882 1882 1882",
+        "language": "fr",
+        "category": "text"
+      },
+      {
+        "image": "l0009.png",
+        "ref": "Théorème de Bolzano-Weierstrass pour les suites bornées",
+        "hyp": "Théorème de Bolzano . Weierstrass pour les suites bonnees 1882 1882 1882",
+        "language": "fr",
+        "category": "title"
+      },
+      {
+        "image": "l0010.png",
+        "ref": "Étude de la convexité d'une fonction deux fois dérivable",
+        "hyp": "' Étude de la convexite d'une function deux fois definable 1957 1958 1961",
+        "language": "fr",
+        "category": "text"
+      }
+    ]
+  }
+]
