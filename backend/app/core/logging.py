@@ -36,6 +36,11 @@ class _RequestIdFilter(logging.Filter):
 
 
 def setup_logging() -> None:
+    if hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
     env = os.getenv("ENV", "dev").lower()
     fmt = os.getenv("LOG_FORMAT", "text" if env == "dev" else "json").lower()
     handler = logging.StreamHandler(sys.stdout)
