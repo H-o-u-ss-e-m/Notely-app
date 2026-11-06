@@ -11,13 +11,13 @@ router = APIRouter(dependencies=[Depends(current_user_id)])
 
 @router.post("/structural-htr", response_model=StructuralHTRResponse)
 @router.post("/structural_htr", response_model=StructuralHTRResponse)
-async def process_structural_htr(request: StructuralHTRRequest):
+async def process_structural_htr(request: StructuralHTRRequest, user_id: str = Depends(current_user_id)):
     """
     Analyse HTR Structurelle :
     Identifie les Grands Titres (H1), Sous-Titres (H2), Textes et Découpe les Schémas/Dessins Géométriques.
     """
     try:
-        return structural_htr_service.process_structural_strokes(request)
+        return structural_htr_service.process_structural_strokes(request, user_id=str(user_id))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

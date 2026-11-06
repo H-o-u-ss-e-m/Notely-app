@@ -15,22 +15,35 @@ from app.schemas.strokes import Stroke
 logger = logging.getLogger("htr_cache")
 
 
-def stroke_fingerprint(strokes: Sequence[Stroke]) -> str:
+def _stroke_attr(s: Any, key: str, default: Any = None) -> Any:
+    if isinstance(s, dict):
+        return s.get(key, default)
+    return getattr(s, key, default)
+
+
+def stroke_fingerprint(strokes: Sequence[Any]) -> str:
     """
     Calcule l'empreinte cryptographique des tracés manuscrits (indépendante de la config).
     Utilisée pour la mémoire de lignes exacte (§8.5.c) et le dédoublonnage.
+    Supporte aussi bien les instances Pydantic Stroke que les dictionnaires JSON.
     """
+    if not strokes:
+        return ""
     h = hashlib.sha256()
     sorted_strokes = sorted(
         strokes,
-        key=lambda s: (getattr(s, "startTime", 0.0), getattr(s, "id", "")),
+        key=lambda s: (float(_stroke_attr(s, "startTime", 0.0) or 0.0), str(_stroke_attr(s, "id", "") or "")),
     )
     for s in sorted_strokes:
-        if getattr(s, "tool", "pen") == "eraser":
+        if _stroke_attr(s, "tool", "pen") == "eraser":
             continue
-        points = getattr(s, "points", [])
+        points = _stroke_attr(s, "points", []) or []
         if points:
-            coords = [v for p in points for v in (round(float(p.x), 1), round(float(p.y), 1))]
+            coords = []
+            for p in points:
+                px = p.get("x", 0.0) if isinstance(p, dict) else getattr(p, "x", 0.0)
+                py = p.get("y", 0.0) if isinstance(p, dict) else getattr(p, "y", 0.0)
+                coords.extend((round(float(px), 1), round(float(py), 1)))
             h.update(struct.pack(f"<{len(coords)}f", *coords))
     return h.hexdigest()
 
@@ -89,7 +102,12 @@ class HtrCache:
                 import redis
                 from app.core.config import settings
                 if hasattr(settings, "REDIS_URL") and settings.REDIS_URL:
-                    r = redis.from_url(str(settings.REDIS_URL), decode_responses=True, socket_timeout=1.0)
+                    r = redis.from_url(
+                        str(settings.REDIS_URL),
+                        decode_responses=True,
+                        socket_timeout=0.1,
+                        socket_connect_timeout=0.1,
+                    )
                     r.ping()
                     self._redis_client = r
                     logger.info("HTR cache connecté à Redis avec succès.")

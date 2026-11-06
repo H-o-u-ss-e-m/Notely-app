@@ -16,6 +16,7 @@ class WordOut:
     bbox: Optional[List[float]] = None      # [xMin, yMin, xMax, yMax] repère page
     corrected: bool = False                 # modifié par dictionnaire ou utilisateur
     original: Optional[str] = None
+    source: Optional[str] = None            # "model" | "memory" | "dictionary"
 
 
 @dataclass
@@ -28,6 +29,8 @@ class LineOut:
     engine: str = ""
     model_version: str = ""
     thumbnail: Optional[str] = None         # Base64 WebP / PNG si demandé
+    source: Optional[str] = None            # "model" | "memory" | "dictionary"
+    calibrated: bool = False
 
 
 class OcrEngine(Protocol):

@@ -14,6 +14,8 @@ class StructuralElementModel {
   final String? imageBase64;
   final List<String> strokeIds;
   final int pageNumber;
+  String? source;
+  final String? strokeFingerprint;
 
   StructuralElementModel({
     required this.id,
@@ -29,6 +31,8 @@ class StructuralElementModel {
     this.imageBase64,
     required this.strokeIds,
     this.pageNumber = 1,
+    this.source,
+    this.strokeFingerprint,
   });
 
   factory StructuralElementModel.fromJson(Map<String, dynamic> json) => StructuralElementModel(
@@ -47,6 +51,8 @@ class StructuralElementModel {
         imageBase64: json['image_base64'] as String?,
         strokeIds: (json['stroke_ids'] as List? ?? []).map((e) => e.toString()).toList(),
         pageNumber: json['pageNumber'] as int? ?? 1,
+        source: json['source'] as String?,
+        strokeFingerprint: json['stroke_fingerprint'] as String?,
       );
 
   Map<String, dynamic> toJson() => {

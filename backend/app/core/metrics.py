@@ -18,6 +18,8 @@ class MetricsCollector:
     def __init__(self):
         self._lock = threading.Lock()
         self._corrections_count: Dict[Tuple[str, str], int] = defaultdict(int)
+        self._corrections_applied: Dict[Tuple[str, str], int] = defaultdict(int)
+        self._repeat_errors: Dict[str, int] = defaultdict(int)
         self._vlm_calls: int = 0
         self._latencies: List[float] = []
         self._confidences: List[float] = []
@@ -26,6 +28,14 @@ class MetricsCollector:
         self._queue_depth: int = 0
         self._failed_jobs: int = 0
         self._total_jobs: int = 0
+
+    def record_correction_applied(self, lang: str, source: str) -> None:
+        with self._lock:
+            self._corrections_applied[(lang or "fr", source or "memory")] += 1
+
+    def record_repeat_error(self, lang: str) -> None:
+        with self._lock:
+            self._repeat_errors[lang or "fr"] += 1
 
     def record_ocr_line(self, latency_s: float, confidence: float) -> None:
         with self._lock:
@@ -117,6 +127,24 @@ class MetricsCollector:
             lines.append("# TYPE ocr_job_failure_ratio gauge")
             fail_ratio = (self._failed_jobs / self._total_jobs) if self._total_jobs > 0 else 0.0
             lines.append(f"ocr_job_failure_ratio {fail_ratio:.4f}")
+
+            # 8. Corrections appliquées (Partie 2.4 — memory / dictionary)
+            lines.append("\n# HELP ocr_correction_applied_total Nombre de corrections appliquées par la couche finale.")
+            lines.append("# TYPE ocr_correction_applied_total counter")
+            if self._corrections_applied:
+                for (lang, src), count in self._corrections_applied.items():
+                    lines.append(f'ocr_correction_applied_total{{lang="{lang}",source="{src}"}} {count}')
+            else:
+                lines.append('ocr_correction_applied_total{lang="fr",source="memory"} 0')
+
+            # 9. Erreurs répétées sur mots déjà connus (Partie 2.4)
+            lines.append("\n# HELP ocr_repeat_error_total Nombre de fois où un mot déjà corrigé est de nouveau corrigé.")
+            lines.append("# TYPE ocr_repeat_error_total counter")
+            if self._repeat_errors:
+                for lang, count in self._repeat_errors.items():
+                    lines.append(f'ocr_repeat_error_total{{lang="{lang}"}} {count}')
+            else:
+                lines.append('ocr_repeat_error_total{lang="fr"} 0')
 
         return "\n".join(lines) + "\n"
 

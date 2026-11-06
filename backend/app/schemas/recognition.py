@@ -42,6 +42,7 @@ class WordResult(BaseModel):
     bbox: Optional[List[float]] = None
     corrected: bool = False
     original: Optional[str] = None
+    source: Optional[str] = None  # "model" | "memory" | "dictionary"
 
 
 class LineRecognitionResult(BaseModel):
@@ -58,6 +59,8 @@ class LineRecognitionResult(BaseModel):
     image_base64: Optional[str] = None  # Rétrocompatibilité
     engine: str = "trocr"
     model_version: str = "v3"
+    source: Optional[str] = None  # "model" | "memory" | "dictionary"
+    stroke_fingerprint: Optional[str] = None
 
 
 class RecognitionResponse(BaseModel):

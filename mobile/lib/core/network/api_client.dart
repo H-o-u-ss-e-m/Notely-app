@@ -218,6 +218,7 @@ class ApiClient {
     required double canvasHeight,
     String subject = "Cours Manuscrit",
     String lessonTitle = "Chapitre 1",
+    String language = "fr",
   }) async {
     await loadSession();
     final url = Uri.parse('${EnvConfig.baseUrl}/structural-htr');
@@ -233,6 +234,7 @@ class ApiClient {
       'canvasHeight': canvasHeight,
       'subject': subject,
       'lessonTitle': lessonTitle,
+      'language': language,
     });
     final response = await http.post(url, headers: _getHeaders(), body: body)
         .timeout(const Duration(seconds: 35));

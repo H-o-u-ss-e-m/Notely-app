@@ -8,6 +8,13 @@ from app.schemas.structural import StructuralElement, StructuralHTRRequest, Stru
 from app.services.segmentation_service import segmentation_service
 from app.services.image_service import image_service
 from app.services.ocr_service import ocr_service
+from app.ml.registry import registry
+from app.ml.cache import stroke_fingerprint
+from app.domain.text_postprocess import postprocess_line
+from app.domain.correction_layer import correction_layer
+from app.domain.user_dictionary import get_user_dictionary_map
+from app.utils.image_utils import pil_to_webp_thumbnail
+from app.schemas.recognition import WordResult
 
 class StructuralHTRService:
     ROMAN_REGEX = re.compile(r'^(I|II|III|IV|V|VI|VII|VIII|IX|X)\s*[\.\-\:\)]\s*', re.IGNORECASE)
@@ -21,8 +28,20 @@ class StructuralHTRService:
             return b64_str.split(",", 1)[1].strip()
         return b64_str.strip()
 
-    def process_structural_strokes(self, request: StructuralHTRRequest) -> StructuralHTRResponse:
+    def process_structural_strokes(self, request: StructuralHTRRequest, user_id: str = "anon") -> StructuralHTRResponse:
         start_time = time.time()
+        lang = getattr(request, "language", "fr") or "fr"
+
+        user_subs = None
+        if user_id and user_id not in ("anon", "usr-guest"):
+            try:
+                import uuid
+                u_uuid = uuid.UUID(str(user_id))
+                from app.db.session import SessionLocal
+                with SessionLocal() as db_sess:
+                    user_subs = get_user_dictionary_map(db_sess, u_uuid, language=lang)
+            except Exception:
+                user_subs = None
         
         # Obtenir la liste des pages
         pages: List[PageData] = []
@@ -118,12 +137,6 @@ class StructuralHTRService:
                     continue
 
                 # 2. Inférence HTR sur le texte avec mots et alternatives (P4 / ML-3)
-                lang = getattr(request, "language", "fr") or "fr"
-                from app.ml.registry import registry
-                from app.domain.text_postprocess import postprocess_line
-                from app.utils.image_utils import pil_to_webp_thumbnail
-                from app.schemas.recognition import WordResult
-
                 chain, _ = registry.chain_for(lang)
                 eng_name = chain[0] if chain else "trocr_fr"
                 engine = registry.get(eng_name)
@@ -131,7 +144,7 @@ class StructuralHTRService:
                 line_out = lines_out[0] if lines_out else None
 
                 if line_out:
-                    line_out = postprocess_line(line_out, lang=lang)
+                    line_out = postprocess_line(line_out, lang=lang, user_subs=None)
                     text_strip = line_out.text.strip()
                     confidence = line_out.confidence
                     min_word_conf = line_out.min_word_confidence
@@ -144,6 +157,7 @@ class StructuralHTRService:
                             bbox=w.bbox,
                             corrected=w.corrected,
                             original=w.original,
+                            source="model",
                         )
                         for w in line_out.words
                     ]
@@ -155,10 +169,38 @@ class StructuralHTRService:
                     words_pydantic = []
                     alternatives = []
 
+                webp_thumb = pil_to_webp_thumbnail(pil_crop)
+                fp_val = stroke_fingerprint(group_strokes)
+
+                elem = StructuralElement(
+                    id=elem_counter,
+                    type=explicit_type or "paragraph",
+                    text=text_strip,
+                    confidence=confidence,
+                    calibrated=False,
+                    min_word_confidence=min_word_conf,
+                    words=words_pydantic,
+                    alternatives=alternatives,
+                    thumbnail=webp_thumb,
+                    bbox=bbox,
+                    image_base64=clean_b64,
+                    stroke_ids=stroke_ids,
+                    pageNumber=page.pageNumber,
+                    source="model",
+                    stroke_fingerprint=fp_val,
+                )
+
+                # Appliquer la couche de correction (mémoire de ligne → dictionnaire) EN DERNIER
+                elem = correction_layer.apply(
+                    user_id=user_id,
+                    lang=lang,
+                    strokes=group_strokes,
+                    result=elem,
+                    user_subs=user_subs,
+                )
+                text_strip = elem.text.strip()
                 if not text_strip:
                     continue
-
-                webp_thumb = pil_to_webp_thumbnail(pil_crop)
 
                 # 3. Détermination du type d'élément (Explicit > Heuristiques)
                 if explicit_type:
@@ -178,6 +220,8 @@ class StructuralHTRService:
                     else:
                         elem_type = "paragraph"
 
+                elem.type = elem_type
+
                 # Mise à jour du Markdown
                 if elem_type.startswith("h") and len(elem_type) == 2 and elem_type[1].isdigit():
                     level = int(elem_type[1])
@@ -186,23 +230,7 @@ class StructuralHTRService:
                 else:
                     markdown_lines.append(text_strip)
 
-                all_elements.append(
-                    StructuralElement(
-                        id=elem_counter,
-                        type=elem_type,
-                        text=text_strip,
-                        confidence=confidence,
-                        calibrated=False,
-                        min_word_confidence=min_word_conf,
-                        words=words_pydantic,
-                        alternatives=alternatives,
-                        thumbnail=webp_thumb,
-                        bbox=bbox,
-                        image_base64=clean_b64,
-                        stroke_ids=stroke_ids,
-                        pageNumber=page.pageNumber,
-                    )
-                )
+                all_elements.append(elem)
                 elem_counter += 1
 
         elapsed_ms = round((time.time() - start_time) * 1000, 2)

@@ -28,6 +28,7 @@ from app.ml.cache import line_cache_key, htr_cache, stroke_fingerprint
 from app.domain.text_postprocess import postprocess_line
 from app.domain.line_memory import line_memory
 from app.domain.user_dictionary import get_user_dictionary_map
+from app.domain.correction_layer import correction_layer
 from app.services.vlm_fallback_service import vlm_fallback_service
 from app.utils.image_utils import pil_to_webp_thumbnail
 from app.core.config import settings
@@ -155,36 +156,7 @@ class HandwritingService:
             webp_thumb = pil_to_webp_thumbnail(pil_crop) if include_thumbs else None
             thumbnails.append(webp_thumb or b64_str)
 
-            # Vérifier la mémoire de ligne exacte (§8.5.c)
-            fp = stroke_fingerprint(group["strokes"])
-            mem_text = line_memory.lookup(user_id, fp)
-            if mem_text is not None:
-                mem_words = [
-                    {
-                        "index": i,
-                        "text": w,
-                        "confidence": 1.0,
-                        "alternatives": [],
-                        "bbox": None,
-                        "corrected": True,
-                        "original": None,
-                    }
-                    for i, w in enumerate(mem_text.split())
-                ]
-                cache_dict = {
-                    "text": mem_text,
-                    "confidence": 1.0,
-                    "min_word_confidence": 1.0,
-                    "words": mem_words,
-                    "alternatives": [],
-                    "engine": "line_memory",
-                    "model_version": "user",
-                }
-                cache_keys.append("")
-                cached_results.append(cache_dict)
-                continue
-
-            # Clé de cache HTR exacte (ML-12a)
+            # Clé de cache HTR exacte (ML-12a) — stocke UNIQUEMENT le résultat brut/post-traité hors corrections
             k = line_cache_key(
                 user_id=user_id,
                 strokes=group["strokes"],
@@ -213,10 +185,10 @@ class HandwritingService:
                 with_words=with_words,
             )
 
-            # Post-traitement (ML-10, ML-5) et mise en cache (ML-12a)
+            # Post-traitement linguistique (ML-10) et mise en cache (ML-12a) sans corrections utilisateur
             for idx_in_uncached, global_idx in enumerate(uncached_indices):
                 line_out = raw_lines_out[idx_in_uncached]
-                line_out = postprocess_line(line_out, lang=lang, user_subs=user_subs)
+                line_out = postprocess_line(line_out, lang=lang, user_subs=None)
 
                 # Repli VLM cloud avec garde-fous (ML-11 / §8.11)
                 if line_out.confidence < min_conf and consent_cloud_ocr:
@@ -228,7 +200,7 @@ class HandwritingService:
                         consent_cloud_ocr=consent_cloud_ocr,
                     )
 
-                # Sérialisation pour le cache
+                # Sérialisation pour le cache (résultat brut du modèle uniquement)
                 cache_dict = {
                     "text": line_out.text,
                     "confidence": line_out.confidence,
@@ -252,7 +224,7 @@ class HandwritingService:
                 htr_cache.set(cache_keys[global_idx], cache_dict)
                 cached_results[global_idx] = cache_dict
 
-        # ── 6. Construction de la réponse finale ──────────────────────────────
+        # ── 6. Construction de la réponse finale + Couche de correction EN DERNIER ──
         recognized_lines: List[LineRecognitionResult] = []
         full_text_parts: List[str] = []
 
@@ -278,11 +250,13 @@ class HandwritingService:
                     bbox=w.get("bbox"),
                     corrected=w.get("corrected", False),
                     original=w.get("original"),
+                    source="model",
                 )
                 for w in res.get("words", [])
             ]
 
             b64_val = thumbnails[idx] if include_thumbs else None
+            fp_val = stroke_fingerprint(group["strokes"])
 
             rec_line = LineRecognitionResult(
                 id=group["id"],
@@ -298,11 +272,22 @@ class HandwritingService:
                 image_base64=b64_val if include_b64 else None,
                 engine=res.get("engine", primary_engine_name),
                 model_version=res.get("model_version", "v3"),
+                source="model",
+                stroke_fingerprint=fp_val,
+            )
+
+            # Appliquer la couche de correction (mémoire de ligne → dictionnaire) EN DERNIER
+            rec_line = correction_layer.apply(
+                user_id=user_id,
+                lang=lang,
+                strokes=group["strokes"],
+                result=rec_line,
+                user_subs=user_subs,
             )
 
             recognized_lines.append(rec_line)
-            if res["text"]:
-                full_text_parts.append(res["text"])
+            if rec_line.text:
+                full_text_parts.append(rec_line.text)
 
         elapsed_ms = round((time.time() - start_time) * 1000, 2)
 
@@ -381,7 +366,7 @@ class HandwritingService:
         )
         line_out = raw_lines[0] if raw_lines else None
         if line_out:
-            line_out = postprocess_line(line_out, lang=lang, user_subs=user_subs)
+            line_out = postprocess_line(line_out, lang=lang, user_subs=None)
             if line_out.confidence < 0.65 and consent_cloud_ocr:
                 line_out = vlm_fallback_service.process_fallback(
                     image=pil_crop,
@@ -400,13 +385,15 @@ class HandwritingService:
                 bbox=w.bbox,
                 corrected=w.corrected,
                 original=w.original,
+                source="model",
             )
             for w in (line_out.words if line_out else [])
         ]
 
         webp_thumb = pil_to_webp_thumbnail(pil_crop) if request.include_thumbnail else None
+        fp_val = stroke_fingerprint(target_strokes)
 
-        return LineRecognitionResult(
+        rec_line = LineRecognitionResult(
             id=1,
             stroke_ids=request.stroke_ids,
             bbox=bbox,
@@ -420,6 +407,15 @@ class HandwritingService:
             image_base64=b64_str,
             engine=primary_engine_name,
             model_version=getattr(engine, "version", "v3"),
+            source="model",
+            stroke_fingerprint=fp_val,
+        )
+        return correction_layer.apply(
+            user_id=user_id,
+            lang=lang,
+            strokes=target_strokes,
+            result=rec_line,
+            user_subs=user_subs,
         )
 
     @staticmethod

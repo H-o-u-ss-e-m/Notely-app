@@ -1,10 +1,15 @@
 """
-Filtres qualité et anti-poison pour les corrections OCR (ML-5 / ML-6 / §8.6.b).
+Filtres qualité et anti-poison pour les corrections OCR (ML-5 / ML-6 / §8.6.b & Plan v2 §1.5).
 Empêche l'empoisonnement du dictionnaire et des jeux d'entraînement
-par des corrections abusives, du spam ou des réécritures complètes.
+par des corrections abusives, du spam ou des réécritures complètes,
+tout en acceptant les corrections légitimes lorsque le moteur ne supporte pas
+encore nativement la langue (ex: arabe) ou a une confiance faible (< 0.5).
 """
 import re
-from typing import Tuple
+from typing import Optional, Tuple, Union
+
+# Langues supportées nativement par les moteurs locaux configurés dans models.yaml
+SUPPORTED_ENGINE_LANGUAGES = {"fr", "en", "de"}
 
 
 def char_error_rate(reference: str, hypothesis: str) -> float:
@@ -62,33 +67,75 @@ def looks_like_spam(text: str) -> bool:
     return False
 
 
+def should_reject(
+    predicted: str,
+    corrected: str,
+    lang: str = "fr",
+    engine_supports_lang: Optional[bool] = None,
+    confidence: Optional[float] = None,
+    max_cer: float = 0.60,
+) -> bool:
+    """
+    Détermine si une correction doit être rejetée pour écart excessif (CER > max_cer).
+    Si le moteur ne supporte pas la langue (ex: arabe sur TrOCR latin) ou si la confiance
+    du modèle est faible (< 0.5), la prédiction initiale n'est pas fiable : on accepte la correction.
+    """
+    lang_norm = (lang or "fr").lower().strip()
+    if engine_supports_lang is None:
+        engine_supports_lang = lang_norm in SUPPORTED_ENGINE_LANGUAGES
+
+    if not engine_supports_lang or (confidence is not None and confidence < 0.5):
+        return False
+
+    c = corrected.strip()
+    p = predicted.strip()
+    if len(c) <= 3 or len(p) <= 3:
+        return False
+
+    return char_error_rate(p, c) > max_cer
+
+
 def validate_correction(
     predicted_text: str,
     corrected_text: str,
     max_cer: float = 0.6,
     max_len: int = 300,
-) -> Tuple[bool, str]:
+    lang: str = "fr",
+    engine_supports_lang: Optional[bool] = None,
+    confidence: Optional[float] = None,
+    return_code: bool = False,
+) -> Union[Tuple[bool, str], Tuple[bool, str, str]]:
     """
     Valide une correction OCR avant enregistrement :
     - Longueur entre 1 et max_len
     - Anti-spam (pas de motifs destructeurs)
-    - CER <= max_cer sauf si le texte prédit est très court (<= 3 caractères)
+    - CER <= max_cer (sauf moteur non supporté pour la langue, confiance < 0.5 ou mot <= 3 caracs)
+    Codes lisibles : OK, EMPTY_CORRECTION, CORRECTION_TOO_LONG, SPAM, CORRECTION_TOO_FAR.
     """
     c = corrected_text.strip()
     if not c:
-        return False, "Le texte corrigé ne peut pas être vide."
+        msg = "Le texte corrigé ne peut pas être vide."
+        return (False, msg, "EMPTY_CORRECTION") if return_code else (False, msg)
 
     if len(c) > max_len:
-        return False, f"La correction dépasse la taille maximale autorisée ({max_len} caractères)."
+        msg = f"La correction dépasse la taille maximale autorisée ({max_len} caractères)."
+        return (False, msg, "CORRECTION_TOO_LONG") if return_code else (False, msg)
 
     if looks_like_spam(c):
-        return False, "La correction a été rejetée par le filtre anti-spam."
+        msg = "La correction a été rejetée par le filtre anti-spam."
+        return (False, msg, "SPAM") if return_code else (False, msg)
 
     p = predicted_text.strip()
-    # Si le texte prédit a au moins 4 caractères, vérifier que ce n'est pas une réécriture totale
-    if len(p) >= 4:
+    if should_reject(
+        predicted=p,
+        corrected=c,
+        lang=lang,
+        engine_supports_lang=engine_supports_lang,
+        confidence=confidence,
+        max_cer=max_cer,
+    ):
         cer = char_error_rate(p, c)
-        if cer > max_cer:
-            return False, f"CER trop élevé ({cer:.2f} > {max_cer:.2f}) : réécriture excessive rejetée."
+        msg = f"CER trop élevé ({cer:.2f} > {max_cer:.2f}) : réécriture excessive rejetée."
+        return (False, msg, "CORRECTION_TOO_FAR") if return_code else (False, msg)
 
-    return True, "OK"
+    return (True, "OK", "OK") if return_code else (True, "OK")

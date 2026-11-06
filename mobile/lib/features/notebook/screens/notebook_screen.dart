@@ -682,6 +682,7 @@ class _NotebookScreenState extends State<NotebookScreen> {
         canvasHeight: kPageHeight,
         subject:      _currentSubject?.name ?? 'Mathématiques',
         lessonTitle:  _currentLesson?.title  ?? 'Chapitre 1',
+        language:     _selectedLanguage.toLowerCase(),
       );
       if (!mounted) return;
       setState(() => _structuralResult = result);
@@ -1276,19 +1277,34 @@ class _NotebookScreenState extends State<NotebookScreen> {
                     onPressed: () {
                       final newText = controller.text.trim();
                       if (newText.isNotEmpty) {
+                        final linePredicted = elem.text;
+                        final wordPredicted = word.original ?? word.text;
                         word.original ??= word.text;
                         word.text = newText;
                         word.corrected = true;
+                        word.source = 'memory';
                         elem.text = elem.words.map((w) => w.text).join(' ');
+                        elem.source = 'memory';
+                        final lineCorrected = elem.text;
 
-                        // Appel asynchrone feedback
+                        final lineStrokes = _pages
+                            .expand((p) => p.strokes)
+                            .where((s) => elem.strokeIds.contains(s.id))
+                            .map((s) => s.toJson())
+                            .toList();
+
+                        // Appel asynchrone feedback complet (Plan v2 §1.3 & §1.5)
                         ApiClient.sendFeedback({
                           'scope': 'word',
                           'word_index': word.index,
                           'stroke_ids': elem.strokeIds,
+                          'strokes': lineStrokes,
+                          'stroke_fingerprint': elem.strokeFingerprint,
                           'language': _selectedLanguage.toLowerCase(),
-                          'predicted_text': word.original ?? newText,
+                          'predicted_text': wordPredicted,
                           'corrected_text': newText,
+                          'line_predicted': linePredicted,
+                          'line_corrected': lineCorrected,
                           'confidence': word.confidence,
                           'consent_train': consentTrain,
                         });

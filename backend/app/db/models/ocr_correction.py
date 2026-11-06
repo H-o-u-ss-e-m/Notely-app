@@ -59,6 +59,7 @@ class OcrCorrection(Base):
     stroke_ids = Column(ARRAY(Text), nullable=False, default=list)
     strokes_json = Column(JSONB, nullable=True)          # Copie complète des tracés de la ligne
     stroke_fingerprint = Column(String(64), nullable=True, index=True)
+    ink_hash = Column(String(64), nullable=True, index=True)  # Hash visuel 256 bits tolérant (hex 64)
 
     # Informations du moteur OCR utilisé
     engine = Column(String(100), nullable=False, default="trocr-base-handwritten")

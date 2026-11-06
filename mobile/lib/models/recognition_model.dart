@@ -7,6 +7,7 @@ class WordModel {
   final List<double>? bbox;
   bool corrected;
   String? original;
+  String? source;
 
   WordModel({
     required this.index,
@@ -17,6 +18,7 @@ class WordModel {
     this.bbox,
     this.corrected = false,
     this.original,
+    this.source,
   });
 
   factory WordModel.fromJson(Map<String, dynamic> json) => WordModel(
@@ -30,6 +32,7 @@ class WordModel {
             : null,
         corrected: json['corrected'] as bool? ?? false,
         original: json['original'] as String?,
+        source: json['source'] as String?,
       );
 }
 

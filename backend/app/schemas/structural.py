@@ -20,6 +20,8 @@ class StructuralElement(BaseModel):
     image_base64: Optional[str] = None
     stroke_ids: List[str] = Field(default_factory=list)
     pageNumber: int = 1
+    source: Optional[str] = None  # "model" | "memory" | "dictionary"
+    stroke_fingerprint: Optional[str] = None
 
 
 class PageData(BaseModel):
