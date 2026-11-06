@@ -27,6 +27,18 @@ import '../../dashboard/dashboard_screen.dart';
 const double kPageWidth  = 794.0;
 const double kPageHeight = 1123.0;
 
+/// Convertit un point de l'écran/viewport vers les coordonnées logiques de la feuille
+/// via l'inverse de la matrice de transformation (Plan v2 §3.4 — jamais de division manuelle).
+Offset toScene(Offset local, Matrix4 m) {
+  final inv = Matrix4.inverted(m);
+  return MatrixUtils.transformPoint(inv, local);
+}
+
+/// Convertit un point de la feuille logique vers les coordonnées du viewport.
+Offset toViewport(Offset scene, Matrix4 m) {
+  return MatrixUtils.transformPoint(m, scene);
+}
+
 class NotebookScreen extends StatefulWidget {
   final SubjectModel? initialSubject;
   final LessonModel? initialLesson;
@@ -225,17 +237,13 @@ class _NotebookScreenState extends State<NotebookScreen> {
     final double cx = _canvasSize.width  / 2.0;
     final double cy = _canvasSize.height / 2.0;
 
-    final Matrix4 m  = _transformationController.value;
-    final double   tx = m.entry(0, 3);
-    final double   ty = m.entry(1, 3);
-
-    // Point de la feuille actuellement sous le centre du viewport
-    final double px = (cx - tx) / _zoomLevel;
-    final double py = (cy - ty) / _zoomLevel;
+    final Matrix4 m = _transformationController.value;
+    // Point de la feuille actuellement sous le centre du viewport via la matrice inverse (§3.4)
+    final Offset pagePt = toScene(Offset(cx, cy), m);
 
     // Nouvelle translation pour que ce même point reste sous le centre
-    final double newTx = cx - px * targetZoom;
-    final double newTy = cy - py * targetZoom;
+    final double newTx = cx - pagePt.dx * targetZoom;
+    final double newTy = cy - pagePt.dy * targetZoom;
 
     _transformationController.value = _makeMatrix(targetZoom, newTx, newTy);
     setState(() => _zoomLevel = targetZoom);
