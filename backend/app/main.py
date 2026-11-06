@@ -122,6 +122,7 @@ from app.api.ocr_feedback import router as ocr_feedback_router
 from app.api.ocr_jobs import router as ocr_jobs_router
 from app.api.me import router as me_router
 from app.api.models_admin import router as models_admin_router
+from app.api.flashcards import router as flashcards_router
 
 # Nouveaux routeurs PostgreSQL (remplacent les anciens Firebase)
 from app.modules.auth.router import router as auth_router
@@ -137,6 +138,7 @@ app.include_router(documents_router,    prefix=settings.API_V1_STR, tags=["Docum
 app.include_router(courses_router,      prefix=settings.API_V1_STR, tags=["Courses"])
 app.include_router(ocr_feedback_router, prefix=settings.API_V1_STR, tags=["OCR Feedback"])
 app.include_router(me_router,           prefix=settings.API_V1_STR, tags=["RGPD & Profil"])
+app.include_router(flashcards_router,   prefix=settings.API_V1_STR, tags=["Flashcards"])
 app.include_router(models_admin_router, prefix=settings.API_V1_STR, tags=["MLOps - Modèles"])
 
 # Routes legacy (compatibilité)

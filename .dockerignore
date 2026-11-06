@@ -1,0 +1,16 @@
+.git
+.github
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+.pytest_cache
+front-angular
+mobile
+docs
+benchmark
+monitoring
+tests
+secrets
+*.md

@@ -8,6 +8,7 @@ from app.db.models.user_dictionary import UserDictionary
 from app.db.models.ocr_job import OcrJob
 from app.db.models.model_version import ModelVersion
 from app.db.models.audit_log import AuditLog
+from app.db.models.flashcard import Flashcard
 
 __all__ = [
     "Base",
@@ -23,4 +24,5 @@ __all__ = [
     "OcrJob",
     "ModelVersion",
     "AuditLog",
+    "Flashcard",
 ]

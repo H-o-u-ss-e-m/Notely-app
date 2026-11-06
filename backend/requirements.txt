@@ -1,6 +1,7 @@
-# ── Serveur & API ─────────────────────────────────────────────────────────────
+﻿# ── Serveur & API ─────────────────────────────────────────────────────────────
 fastapi>=0.100.0,<1.0.0
-uvicorn[standard]>=0.22.0,<0.35.0
+uvicorn[standard]>=0.22.0,<1.0.0
+gunicorn>=22.0.0,<24.0.0
 
 # ── Machine Learning ──────────────────────────────────────────────────────────
 # IMPORTANT : transformers<5 — la v5 supprime le pipeline image-to-text
@@ -11,7 +12,7 @@ torchvision>=0.15.0,<1.0.0
 
 # ── Traitement image ──────────────────────────────────────────────────────────
 pillow>=9.5.0,<12.0.0
-opencv-python>=4.7.0.72,<5.0.0
+opencv-python>=4.7.0.72,<6.0.0
 
 # ── Calcul numérique ──────────────────────────────────────────────────────────
 numpy>=1.24.0,<3.0.0
@@ -28,13 +29,15 @@ psycopg2-binary>=2.9.0,<3.0.0
 alembic>=1.11.0,<2.0.0
 
 # ── Authentification & Sécurité (SEC-2 / SEC-6) ───────────────────────────────
-argon2-cffi>=23.1.0,<24.0.0
-bcrypt>=4.0.0,<5.0.0
+argon2-cffi>=23.1.0,<26.0.0
+bcrypt>=4.0.0,<6.0.0
 python-jose[cryptography]>=3.3.0,<4.0.0
 slowapi>=0.1.9,<1.0.0
 
 # ── Export PDF ────────────────────────────────────────────────────────────────
-reportlab>=4.0.0,<5.0.0
+reportlab>=4.0.0,<6.0.0
+arabic-reshaper>=3.0.0,<4.0.0
+python-bidi>=0.4.2,<1.0.0
 
 # ── Files de tâches asynchrones & Cache (ARCH-2 / ML-12a) ────────────────────
 celery[redis]>=5.3.0,<6.0.0

@@ -1,17 +1,115 @@
+# ==============================================================================
+# Notely — pile complète : db, redis, migrate, api, worker, proxy (Caddy)
+#   cp .env.example .env   (renseigner POSTGRES_PASSWORD et JWT_SECRET_KEY)
+#   docker compose up --build
+# ==============================================================================
+x-backend-env: &backend-env
+  ENV: ${ENV:-dev}
+  DATABASE_URL: postgresql+psycopg2://notely:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}@db:5432/notely
+  REDIS_URL: redis://redis:6379/0
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY manquant dans .env}
+  CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:4200"]}
+  TROCR_MODEL: ${TROCR_MODEL:-microsoft/trocr-base-handwritten}
+  MAX_REQUEST_BODY_MB: ${MAX_REQUEST_BODY_MB:-25}
+  HF_HOME: /home/appuser/.cache/huggingface
+
 services:
-  ocr-backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ocr_manuscrit_backend
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: notely
+      POSTGRES_USER: notely
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant dans .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notely -d notely"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  migrate:
+    build: .
+    command: ["sh", "-c", "cd /app && alembic upgrade head"]
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    restart: unless-stopped
+    command: ["gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", "-w", "${API_WORKERS:-2}", "-b", "0.0.0.0:8000", "--timeout", "120"]
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - hf_cache:/home/appuser/.cache/huggingface
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+    expose:
+      - "8000"
+
+  worker:
+    build: .
+    restart: unless-stopped
+    command: ["celery", "-A", "app.workers.celery_app", "worker", "-l", "info", "--concurrency=1"]
+    environment: *backend-env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - hf_cache:/home/appuser/.cache/huggingface
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.workers.celery_app inspect ping -d celery@$$HOSTNAME || exit 1"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    # GPU NVIDIA : décommenter
+    # deploy: { resources: { reservations: { devices: [{ capabilities: [gpu] }] } } }
+
+  proxy:
+    image: caddy:2-alpine
     restart: unless-stopped
     ports:
-      - "8000:8000"
-    environment:
-      - HOST=0.0.0.0
-      - PORT=8000
-      - DEBUG=true
-      - DEVICE=cpu
-      - TROCR_MODEL=microsoft/trocr-base-handwritten
+      - "80:80"
+      - "443:443"
     volumes:
-      - ./backend:/app/backend
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  redisdata:
+  hf_cache:
+  caddy_data:
+  caddy_config:

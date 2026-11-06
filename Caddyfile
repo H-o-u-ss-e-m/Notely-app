@@ -1,0 +1,18 @@
+# Caddyfile — TLS automatique en production (NOTELY_DOMAIN=api.mondomaine.com).
+# En local : NOTELY_DOMAIN=localhost (certificat auto-signé Caddy).
+{$NOTELY_DOMAIN:localhost} {
+	request_body {
+		max_size 10MB
+	}
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "no-referrer"
+	}
+	# /metrics n'est pas exposé publiquement (réseau interne uniquement)
+	@internal path /metrics
+	respond @internal 404
+	reverse_proxy api:8000
+}
