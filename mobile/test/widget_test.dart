@@ -6,7 +6,6 @@ import 'package:mobile/models/structural_model.dart';
 import 'package:mobile/features/notebook/screens/notebook_screen.dart';
 import 'package:mobile/core/network/api_client.dart';
 import 'package:mobile/core/localization/notely_translations.dart';
-import 'package:mobile/features/notebook/widgets/save_status_chip.dart';
 
 void main() {
   testWidgets('Notely smoke test', (WidgetTester tester) async {

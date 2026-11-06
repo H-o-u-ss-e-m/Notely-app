@@ -14,6 +14,10 @@ engines:
     source: microsoft/trocr-base-handwritten
     version: v3-de
     languages: [de]
+  arabic_engine:
+    type: arabic
+    version: v1-ar
+    languages: [ar]
 
 routing:
   fr:
@@ -26,8 +30,8 @@ routing:
     chain: [trocr_de]
     min_confidence: 0.55
   ar:
-    chain: [trocr_fr]
-    min_confidence: 0.0
+    chain: [arabic_engine]
+    min_confidence: 0.50
   auto:
     chain: [trocr_fr, trocr_en]
     min_confidence: 0.55

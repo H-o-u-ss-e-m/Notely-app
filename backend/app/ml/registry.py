@@ -11,6 +11,7 @@ from collections import OrderedDict
 from typing import Dict, List, Tuple, Optional
 from app.ml.engines.base import OcrEngine
 from app.ml.engines.trocr import TrOCROcrEngine
+from app.ml.engines.arabic_engine import ArabicOcrEngine
 
 logger = logging.getLogger("engine_registry")
 
@@ -29,6 +30,12 @@ def build_engine(engine_name: str, engine_cfg: dict) -> OcrEngine:
             model_name=source,
             languages=languages,
             version=version,
+        )
+    elif etype == "arabic":
+        return ArabicOcrEngine(
+            name=engine_name,
+            version=version,
+            languages=languages,
         )
     raise ValueError(f"Type de moteur inconnu : {etype}")
 
