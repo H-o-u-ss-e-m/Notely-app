@@ -1,0 +1,75 @@
+<div class="auth-wrapper">
+  <div class="ambient-circle circle-1"></div>
+  <div class="ambient-circle circle-2"></div>
+
+  <div class="auth-card">
+    <div class="brand-header">
+      <div class="logo-box">
+        <img src="logo.png" alt="Notely Logo" class="logo-img" />
+        <span class="logo-glow"></span>
+      </div>
+      <h1 class="brand-title">Notely</h1>
+      <p class="brand-sub">Carnet de Notes Manuscrites Intelligentes & OCR HTR</p>
+    </div>
+
+    <div class="mode-tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="authMode === 'login'" 
+        (click)="authMode = 'login'">
+        Connexion
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="authMode === 'register'" 
+        (click)="authMode = 'register'">
+        Créer un compte
+      </button>
+    </div>
+
+    @if (errorMessage) {
+      <div class="error-banner">
+        {{ errorMessage }}
+      </div>
+    }
+
+    <form (ngSubmit)="submit()" class="auth-form">
+      @if (authMode === 'register') {
+        <div class="input-group">
+          <label>Nom complet</label>
+          <input type="text" [(ngModel)]="displayName" name="name" placeholder="Ex: Jean Dupont" required />
+        </div>
+      }
+
+      <div class="input-group">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="email" name="email" placeholder="etudiant@notely.ai" required />
+      </div>
+
+      <div class="input-group">
+        <label>Mot de passe</label>
+        <input type="password" [(ngModel)]="password" name="password" placeholder="••••••••" required />
+      </div>
+
+      <button type="submit" class="submit-btn" [disabled]="loading">
+        @if (loading) {
+          <span class="loader"></span>
+        } @else {
+          {{ authMode === 'login' ? 'Accéder à mes cours' : 'Commencer sur Notely' }}
+        }
+      </button>
+    </form>
+
+    <div class="demo-accounts">
+      <span class="demo-title">Comptes de test 1-clic :</span>
+      <div class="demo-chips">
+        <button class="demo-chip" (click)="fillDemo('etudiant@notely.ai', 'notely123', 'Étudiant Test')">
+          👨‍🎓 Étudiant Démo
+        </button>
+        <button class="demo-chip" (click)="fillDemo('professeur@notely.ai', 'notely123', 'Professeur Test')">
+          👨‍🏫 Professeur Démo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,484 @@
+<div class="notebook-container">
+  <!-- Top Action & Tools Bar -->
+  <div class="editor-header">
+    <div class="header-left">
+      <button class="back-btn" (click)="stateService.setView('dashboard')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        Retour
+      </button>
+
+      <div class="course-info">
+        <h2>{{ (stateService.currentLesson$ | async)?.title || 'Cahier de notes' }}</h2>
+        <span class="subject-tag">{{ (stateService.currentSubject$ | async)?.name }}</span>
+      </div>
+
+      <!-- Auto-save Status Chip (Partie 4.2) -->
+      <app-save-status-chip
+        [status]="(stateService.saveState$ | async) || 'saved'"
+        [lastSavedTime]="(stateService.lastSavedTime$ | async) || ''">
+      </app-save-status-chip>
+    </div>
+
+    <div class="header-actions">
+      <!-- 1. Enregistrer Manuel (Partie 4.1) -->
+      <button class="btn-action save-btn" (click)="saveCourse()" [title]="i18nService.t().actions.saveTooltip">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+          <polyline points="17 21 17 13 7 13 7 21"></polyline>
+          <polyline points="7 3 7 8 15 8"></polyline>
+        </svg>
+        <span>{{ i18nService.t().actions.save }}</span>
+      </button>
+
+      <!-- EXPORTER PDF -->
+      <button class="btn-action pdf-btn" (click)="openPdfModal()" [title]="i18nService.t().actions.exportPdfTooltip">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <polyline points="9 15 12 18 15 15"></polyline>
+        </svg>
+        <span>{{ i18nService.t().actions.exportPdf }}</span>
+      </button>
+
+      <!-- 2. Reconnaître le texte manuscrit (Partie 4.1) -->
+      <button class="btn-action ocr-btn" [class.loading]="isProcessingHtr" (click)="runOcr()" [title]="i18nService.t().actions.runOcrTooltip">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>{{ isProcessingHtr ? i18nService.t().actions.runOcrRunning : i18nService.t().actions.runOcr }}</span>
+      </button>
+
+      <!-- 3. Synthèse & Fiches IA (Partie 4.1) -->
+      <button class="btn-action ai-btn" [class.loading]="isProcessingAi" (click)="runAiSynthesis()" [title]="i18nService.t().actions.aiAssistTooltip">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+        </svg>
+        <span>{{ isProcessingAi ? i18nService.t().actions.aiAssistRunning : i18nService.t().actions.aiAssist }}</span>
+      </button>
+
+      <!-- Sélecteur de langue d'interface & HTR (Partie 4.6) -->
+      <select class="lang-select" [ngModel]="i18nService.currentLocale" (ngModelChange)="i18nService.setLocale($event); selectedLanguage = $event" title="Langue / Language / اللغة">
+        <option value="fr">🇫🇷 FR</option>
+        <option value="en">🇬🇧 EN</option>
+        <option value="ar">🇸🇦 AR</option>
+      </select>
+
+      <button class="btn-action flashcard-btn" (click)="generateFlashcards()" [disabled]="isGeneratingCards" title="Générer des cartes de révision espacée (SM-2) depuis l'OCR">
+        <span>🗂️ {{ isGeneratingCards ? 'Génération...' : 'Cartes SM-2' }}</span>
+      </button>
+
+      <button class="btn-action due-btn" (click)="openDueFlashcards()" title="Réviser les cartes du jour">
+        <span>⏰ Réviser dues</span>
+      </button>
+
+      @if (structuralResult) {
+        <button class="btn-action toggle-panel-btn" (click)="showAiPanel = !showAiPanel">
+          {{ showAiPanel ? 'Masquer IA' : 'Afficher IA' }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Drawing Toolbar -->
+  <div class="drawing-toolbar">
+    <div class="tool-group">
+      <button class="tool-btn" [class.active]="activeTool === 'pen'" (click)="activeTool = 'pen'" [title]="i18nService.t().tools.penTooltip">
+        ✏️ {{ i18nService.t().tools.pen }}
+      </button>
+      <button class="tool-btn" [class.active]="activeTool === 'diagram'" (click)="activeTool = 'diagram'" [title]="i18nService.t().tools.diagramTooltip">
+        📐 {{ i18nService.t().tools.diagram }}
+      </button>
+      <button class="tool-btn" [class.active]="activeTool === 'eraser'" (click)="activeTool = 'eraser'" [title]="i18nService.t().tools.eraserTooltip">
+        🧹 {{ i18nService.t().tools.eraser }}
+      </button>
+      <button class="tool-btn lasso-btn" [class.active]="activeTool === 'lasso'" (click)="activeTool = 'lasso'" title="Lasso : encercler des tracés pour les sélectionner et déplacer">
+        ✂️ Lasso
+      </button>
+      <!-- Option Rejet de paume / mode stylet seul (§4.4) -->
+      <button class="tool-btn palm-btn" [class.active]="penOnlyMode" (click)="penOnlyMode = !penOnlyMode" title="Mode stylet seul : ignore la paume et les doigts sur l'écran tactile">
+        🖐️ Rejet paume
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Palette de Couleurs -->
+    <div class="color-palette">
+      @for (c of palette; track c.color) {
+        <button 
+          class="palette-dot" 
+          [style.background]="c.color"
+          [class.selected]="activeColor === c.color && activeTool !== 'eraser'"
+          (click)="activeColor = c.color; activeTool = 'pen'">
+        </button>
+      }
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Épaisseurs -->
+    <div class="width-group">
+      @for (w of widths; track w) {
+        <button 
+          class="width-btn" 
+          [class.selected]="activeWidth === w"
+          (click)="activeWidth = w">
+          <span class="width-preview" [style.height.px]="w * 2"></span>
+        </button>
+      }
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Annuler / Rétablir / Effacer -->
+    <div class="history-group">
+      <button class="icon-btn" (click)="undo()" title="Annuler (Ctrl+Z)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+      </button>
+      <button class="icon-btn" (click)="redo()" title="Rétablir (Ctrl+Y)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+      </button>
+      <button class="icon-btn danger" (click)="clearPage()" title="Effacer la page">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Pagination -->
+    <div class="page-controls">
+      <button class="page-arrow" [disabled]="currentPageIndex === 0" (click)="setPage(currentPageIndex - 1)">‹</button>
+      <span class="page-label">{{ currentPageIndex + 1 }} / {{ pages.length }}</span>
+      <button class="page-arrow" [disabled]="currentPageIndex === pages.length - 1" (click)="setPage(currentPageIndex + 1)">›</button>
+      <button class="add-page-btn" (click)="addPage()" title="Nouvelle page">+ Page</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Modèle de page (§6.6) -->
+    <div class="template-group" title="Modèle de page (§6.6)">
+      <select class="template-select" [(ngModel)]="currentTemplate" (ngModelChange)="redraw()">
+        <option value="lined">📏 Ligné</option>
+        <option value="grid">▦ Quadrillé</option>
+        <option value="dots">⁖ Pointillés</option>
+        <option value="blank">📄 Blanc</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Recherche dans l'écriture (§6.3) -->
+    <div class="search-ink-box" title="Recherche dans l'écriture manuscrite (§6.3)">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        class="search-ink-input"
+        placeholder="Chercher écriture..."
+        [ngModel]="inkSearchQuery"
+        (ngModelChange)="onInkSearchChange($event)" />
+      @if (inkSearchQuery) {
+        <button class="clear-search-btn" (click)="clearInkSearch()">✕</button>
+        <span class="match-count">{{ inkSearchMatches.length }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- Workspace: Canvas & Optional AI Side Panel -->
+  <div class="editor-workspace" [class.with-panel]="showAiPanel && structuralResult">
+    <div class="canvas-viewport" #hostViewport>
+      <!-- Contrôles flottants de Zoom (P2 UX Critique) -->
+      <div class="floating-zoom-controls">
+        <button class="zoom-btn" (click)="zoomOut()" [title]="i18nService.t().zoom.zoomOut">-</button>
+        <button class="zoom-btn zoom-label" (click)="resetZoom()" [title]="i18nService.t().zoom.reset">
+          {{ (zoomLevel * 100) | number:'1.0-0' }}%
+        </button>
+        <button class="zoom-btn" (click)="zoomIn()" [title]="i18nService.t().zoom.zoomIn">+</button>
+        <button class="zoom-btn pan-mode-btn" [class.active]="isPanMode" (click)="togglePanMode()" [title]="i18nService.t().tools.panTooltip">
+          🖐
+        </button>
+      </div>
+
+      <!-- Badge de Zoom HUD temporaire (§4.5) -->
+      @if (zoomBadgeVisible) {
+        <div class="hud-zoom-badge">
+          {{ (zoomLevel * 100) | number:'1.0-0' }}%
+        </div>
+      }
+
+      @if (showCursor && !isPanMode) {
+        <div
+          class="pen-cursor-overlay"
+          [style.left.px]="cursorX"
+          [style.top.px]="cursorY"
+          [style.width.px]="cursorDiameter"
+          [style.height.px]="cursorDiameter"
+          [style.borderColor]="activeTool === 'eraser' ? '#ef4444' : activeColor">
+        </div>
+      }
+
+      <canvas 
+        #canvas 
+        class="drawing-canvas"
+        (pointerdown)="onPointerDown($event)"
+        (pointermove)="onPointerMove($event)"
+        (pointerup)="onPointerUp($event)"
+        (pointercancel)="onPointerUp($event)"
+        (pointerleave)="onPointerLeave()">
+      </canvas>
+    </div>
+
+    <!-- AI Panel Side View -->
+    @if (showAiPanel && structuralResult) {
+      <div class="ai-side-panel">
+        <div class="panel-header">
+          <h3>Résultat IA & OCR</h3>
+          <button class="close-panel-btn" (click)="showAiPanel = false">✕</button>
+        </div>
+
+        <div class="panel-body">
+          <div class="result-stats">
+            <span class="stat-tag" [class.high-confidence]="avgConfidence >= 0.8" [class.low-confidence]="avgConfidence < 0.5">
+              {{ isCalibrated ? 'Confiance : ' : 'Confiance indicative : ' }}{{ (avgConfidence * 100) | number:'1.0-0' }}%
+            </span>
+            @if (minConfidence < 0.6) {
+              <span class="stat-tag warning-tag">Min : {{ (minConfidence * 100) | number:'1.0-0' }}%</span>
+            }
+            <span class="stat-tag">{{ structuralResult.elements.length }} blocs</span>
+          </div>
+
+          <!-- Onglets OCR (§6.4) -->
+          <div class="ocr-tabs">
+            <button class="ocr-tab-btn" [class.active]="ocrTab === 'text'" (click)="ocrTab = 'text'">Texte</button>
+            <button class="ocr-tab-btn" [class.active]="ocrTab === 'words'" (click)="ocrTab = 'words'">Mot à mot</button>
+            <button class="ocr-tab-btn" [class.active]="ocrTab === 'structure'" (click)="ocrTab = 'structure'">Structure</button>
+          </div>
+
+          <!-- Onglet 1 : Texte avec mots douteux stylés -->
+          @if (ocrTab === 'text') {
+            <div class="tab-content text-tab">
+              <div class="legend-bar">
+                <span class="legend-item"><span class="legend-line sure"></span> Sûr</span>
+                <span class="legend-item"><span class="legend-line check"></span> À vérifier</span>
+                <span class="legend-item"><span class="legend-line wrong"></span> Douteux</span>
+              </div>
+              <div class="paragraphs-list">
+                @for (el of structuralResult.elements; track el.id) {
+                  @if (el.type !== 'diagram') {
+                    <div class="element-text-row">
+                      @if (el.words && el.words.length) {
+                        @for (w of el.words; track w.index) {
+                          <span 
+                            class="clickable-word" 
+                            [attr.data-level]="getConfidenceLevel(w.confidence)"
+                            [class.corrected]="w.corrected"
+                            (click)="openWordCorrection(el, w)">
+                            {{ w.text }}
+                            @if (w.corrected) { <small class="corrected-tag">✎</small> }
+                          </span>
+                          {{ ' ' }}
+                        }
+                      } @else {
+                        <span>{{ el.text }}</span>
+                      }
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Onglet 2 : Mot à mot avec miniatures de lignes -->
+          @if (ocrTab === 'words') {
+            <div class="tab-content words-tab">
+              <div class="lines-word-list">
+                @for (el of structuralResult.elements; track el.id) {
+                  @if (el.type !== 'diagram') {
+                    <div class="line-word-card">
+                      @if (el.thumbnail || el.image_base64) {
+                        <div class="line-thumb-container">
+                          <img [src]="el.thumbnail || el.image_base64" alt="Ligne manuscrite" class="line-thumb" />
+                        </div>
+                      }
+                      <div class="words-chips-wrap">
+                        @if (el.words && el.words.length) {
+                          @for (w of el.words; track w.index) {
+                            <div class="word-chip-pill" [attr.data-level]="getConfidenceLevel(w.confidence)">
+                              <span class="word-chip-text" (click)="openWordCorrection(el, w)">
+                                {{ w.text }}
+                                @if (w.corrected) { <span class="tag-corr">✎</span> }
+                              </span>
+                              @if (w.corrected) {
+                                <button class="btn-revert-word" (click)="revertWordCorrection(el, w, $event)" title="Annuler correction">↺</button>
+                              }
+                            </div>
+                          }
+                        } @else {
+                          <span class="fallback-line-text">{{ el.text }}</span>
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Onglet 3 : Structure -->
+          @if (ocrTab === 'structure') {
+            <div class="tab-content structure-tab">
+              <div class="transcription-preview">
+                <h4>Markdown Structuré :</h4>
+                <div class="markdown-content">
+                  <pre>{{ structuralResult.fullMarkdown }}</pre>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- MODAL CORRECTION MOT À MOT (P4 / §6.4) -->
+  @if (showWordModal && selectedWord) {
+    <div class="word-modal-backdrop" (click)="closeWordModal()">
+      <div class="word-modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h4>Corriger un mot</h4>
+          <button class="close-btn" (click)="closeWordModal()">✕</button>
+        </div>
+        <div class="modal-body">
+          @if (selectedElement?.thumbnail || selectedElement?.image_base64) {
+            <div class="word-preview-image">
+              <img [src]="selectedElement?.thumbnail || selectedElement?.image_base64" alt="Zone manuscrite" />
+            </div>
+          }
+          <div class="recognized-info">
+            <span>Reconnu : <strong>« {{ selectedWord.original || selectedWord.text }} »</strong></span>
+            <span class="conf-badge">Confiance : {{ (selectedWord.confidence * 100) | number:'1.0-0' }}%</span>
+          </div>
+
+          @if (selectedWord.alternatives && selectedWord.alternatives.length) {
+            <div class="suggestions-box">
+              <span class="sugg-title">Suggestions :</span>
+              <div class="sugg-chips">
+                @for (alt of selectedWord.alternatives; track alt) {
+                  <button type="button" class="sugg-chip" (click)="selectAlternative(alt)">{{ alt }}</button>
+                }
+              </div>
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="corrInput">Votre correction :</label>
+            <input 
+              id="corrInput"
+              type="text" 
+              class="input-correction" 
+              [(ngModel)]="correctionInput"
+              (keyup.enter)="applyWordCorrection()" 
+              autofocus />
+          </div>
+
+          <div class="consent-group">
+            <label class="consent-label">
+              <input type="checkbox" [(ngModel)]="consentTrainFeedback" />
+              <span>Aider à améliorer la reconnaissance (opt-in)</span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="closeWordModal()">Annuler</button>
+          <button class="btn-confirm" (click)="applyWordCorrection()">Corriger</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL EXPORT PDF (OPTION 1 & OPTION 2) -->
+  @if (showPdfModal) {
+    <div class="pdf-modal-backdrop" (click)="closePdfModal()">
+      <div class="pdf-modal-content" (click)="$event.stopPropagation()">
+        <div class="pdf-modal-header">
+          <h3>📄 Exporter en Document PDF</h3>
+          <button class="close-btn" (click)="closePdfModal()">✕</button>
+        </div>
+        <p class="pdf-modal-sub">Choisissez le format d'exportation souhaité :</p>
+        
+        <div class="pdf-options-grid">
+          <div class="pdf-option-card" (click)="exportOriginalPdf()">
+            <div class="option-icon">🖋️</div>
+            <h4>Option 1 : PDF Original</h4>
+            <p>Conserve fidèlement l'écriture manuscrite, les couleurs, les schémas et la mise en page exacte du carnet.</p>
+            <button class="btn-select-option" [disabled]="isExportingPdf">
+              {{ isExportingPdf ? 'Génération...' : 'Télécharger PDF Original' }}
+            </button>
+          </div>
+
+          <div class="pdf-option-card highlighted" (click)="exportAiPdf()">
+            <div class="option-icon">✨</div>
+            <h4>Option 2 : PDF IA / Structuré</h4>
+            <p>Convertit l'écriture manuscrite en texte propre structuré (Titres, Paragraphes) tout en conservant les schémas.</p>
+            <button class="btn-select-option primary" [disabled]="isExportingPdf">
+              {{ isExportingPdf ? 'Analyse & Génération...' : 'Télécharger PDF Structuré' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL CARTES DE RÉVISION SM-2 (§6.7) -->
+  @if (showFlashcardModal) {
+    <div class="flashcard-modal-backdrop" (click)="closeFlashcards()">
+      <div class="flashcard-modal-card" (click)="$event.stopPropagation()">
+        <div class="card-header">
+          <span class="card-badge">Carte {{ currentCardIdx + 1 }} / {{ activeCards.length }}</span>
+          <button class="close-btn" (click)="closeFlashcards()">✕</button>
+        </div>
+        <div class="card-body" (click)="flipCard()">
+          <div class="card-prompt">
+            <span class="card-label">Question / Concept</span>
+            <p>{{ activeCards[currentCardIdx]?.front }}</p>
+          </div>
+          @if (showCardAnswer) {
+            <div class="card-answer">
+              <span class="card-label">Réponse</span>
+              <p>{{ activeCards[currentCardIdx]?.back }}</p>
+            </div>
+          } @else {
+            <div class="card-hint">
+              <em>👉 Cliquez pour afficher la réponse</em>
+            </div>
+          }
+        </div>
+        @if (showCardAnswer) {
+          <div class="card-ratings">
+            <span class="rate-title">Évaluation SM-2 :</span>
+            <div class="rate-buttons">
+              <button class="rate-btn r0" (click)="reviewCurrentCard(0)">0 (Échec)</button>
+              <button class="rate-btn r2" (click)="reviewCurrentCard(2)">2 (Difficile)</button>
+              <button class="rate-btn r3" (click)="reviewCurrentCard(3)">3 (Bon)</button>
+              <button class="rate-btn r5" (click)="reviewCurrentCard(5)">5 (Parfait)</button>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+</div>

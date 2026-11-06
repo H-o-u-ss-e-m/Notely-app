@@ -1,0 +1,180 @@
+<div class="dashboard-page">
+  <!-- Hero Banner 3D Notely -->
+  <div class="hero-banner">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>Reconnaissance Vectorielle & IA HTR</span>
+      </div>
+      <h1 class="hero-title">Vos Espaces de Travail</h1>
+      <p class="hero-desc">Organisez vos matières, écrivez au stylet et bénéficiez de l'auto-save toutes les 5 minutes avec Notely.</p>
+
+      <div class="hero-actions">
+        <button class="action-btn primary" (click)="openNewCourseDialog()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Nouveau Cours
+        </button>
+        <button class="action-btn secondary" (click)="openNewSpaceDialog()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            <line x1="12" y1="11" x2="12" y2="17"></line>
+            <line x1="9" y1="14" x2="15" y2="14"></line>
+          </svg>
+          Nouvel Espace
+        </button>
+      </div>
+    </div>
+
+    <div class="hero-stats">
+      <div class="stat-card">
+        <span class="stat-num">{{ (stateService.subjects$ | async)?.length || 0 }}</span>
+        <span class="stat-label">Espaces (Matières)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">{{ filteredCourses.length }}</span>
+        <span class="stat-label">Cours Enregistrés</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Space Filter Bar -->
+  <div class="controls-bar">
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input 
+        type="text" 
+        [ngModel]="stateService.searchQuery$ | async" 
+        (ngModelChange)="stateService.setSearchQuery($event)"
+        placeholder="Rechercher un cours ou un espace..." />
+    </div>
+
+    <!-- Horizontal Space Chips -->
+    <div class="spaces-chips-scroll">
+      <button 
+        class="space-chip" 
+        [class.active]="(stateService.activeSubjectFilter$ | async) === 'all'"
+        (click)="stateService.setFilter('all')">
+        Tous
+      </button>
+
+      @for (s of (stateService.subjects$ | async); track s.id) {
+        <button 
+          class="space-chip" 
+          [class.active]="(stateService.activeSubjectFilter$ | async) === s.id"
+          [style.--chip-color]="s.color"
+          (click)="stateService.setFilter(s.id)">
+          <span class="chip-color-dot" [style.background]="s.color"></span>
+          {{ s.name }} ({{ s.lessons.length }})
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Courses Grid -->
+  <div class="courses-section">
+    @if (filteredCourses.length === 0) {
+      <div class="empty-state-card">
+        <div class="empty-icon">📝</div>
+        <h3>Aucun cours trouvé</h3>
+        <p>Créez votre premier cours ou ajustez votre recherche pour commencer.</p>
+        <button class="empty-btn" (click)="openNewCourseDialog()">+ Créer un cours</button>
+      </div>
+    } @else {
+      <div class="courses-grid">
+        @for (item of filteredCourses; track item.lesson.id) {
+          <div class="course-card" (click)="openCourse(item.subject, item.lesson)">
+            <div class="card-header">
+              <span class="space-badge" [style.background]="item.subject.color + '22'" [style.color]="item.subject.color">
+                <span class="dot" [style.background]="item.subject.color"></span>
+                {{ item.subject.name }}
+              </span>
+              <span class="date-badge">{{ item.lesson.updatedAt }}</span>
+            </div>
+
+            <h3 class="course-title">{{ item.lesson.title }}</h3>
+            <p class="course-meta">Cahier de notes manuscrites</p>
+
+            <div class="card-footer">
+              <span class="open-link">
+                Ouvrir dans Notely
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Modal Nouvel Espace -->
+  @if (showNewSpaceModal) {
+    <div class="modal-backdrop" (click)="showNewSpaceModal = false">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>Nouvel Espace de Travail</h3>
+        <p class="modal-desc">Définissez une matière ou une thématique d'études.</p>
+
+        <div class="form-group">
+          <label>Nom de l'espace</label>
+          <input type="text" [(ngModel)]="newSpaceName" placeholder="Ex: Mathématiques, Histoire, Physique" autofocus />
+        </div>
+
+        <div class="form-group">
+          <label>Couleur distinctive</label>
+          <div class="color-picker-row">
+            @for (col of colors; track col) {
+              <div 
+                class="color-circle" 
+                [style.background]="col" 
+                [class.selected]="newSpaceColor === col"
+                (click)="newSpaceColor = col">
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="showNewSpaceModal = false">Annuler</button>
+          <button class="btn-confirm" (click)="createSpace()">Créer l'espace</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Nouveau Cours -->
+  @if (showNewCourseModal) {
+    <div class="modal-backdrop" (click)="showNewCourseModal = false">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>Nouveau Cours Manuscrit</h3>
+        <p class="modal-desc">Préparez une nouvelle session de prise de notes.</p>
+
+        <div class="form-group">
+          <label>Titre du cours</label>
+          <input type="text" [(ngModel)]="newCourseTitle" placeholder="Ex: Dérivées & Intégrales" autofocus />
+        </div>
+
+        <div class="form-group">
+          <label>Espace de rattachement</label>
+          <select [(ngModel)]="newCourseSubjectId">
+            @for (s of (stateService.subjects$ | async); track s.id) {
+              <option [value]="s.id">{{ s.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="showNewCourseModal = false">Annuler</button>
+          <button class="btn-confirm" (click)="createCourse()">Commencer à écrire</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

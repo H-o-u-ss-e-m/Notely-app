@@ -1,0 +1,40 @@
+<div class="app-root notely-theme">
+  <!-- 1. Vue Splash Screen -->
+  @if ((stateService.currentView$ | async) === 'splash') {
+    <app-splash-screen></app-splash-screen>
+  }
+
+  <!-- 2. Vue Authentification -->
+  @if ((stateService.currentView$ | async) === 'auth') {
+    <app-auth></app-auth>
+  }
+
+  <!-- 3. Vues Applicatives (avec Navbar) -->
+  @if ((stateService.currentView$ | async) === 'dashboard' || (stateService.currentView$ | async) === 'editor') {
+    <app-navbar></app-navbar>
+
+    <main class="main-content">
+      @if ((stateService.currentView$ | async) === 'dashboard') {
+        <app-dashboard></app-dashboard>
+      }
+
+      @if ((stateService.currentView$ | async) === 'editor') {
+        <app-notebook-editor></app-notebook-editor>
+      }
+    </main>
+  }
+
+  <!-- Toast Notifications Globales -->
+  <div class="toast-container">
+    @for (t of (toastService.toasts$ | async); track t.id) {
+      <div class="toast-item" [class]="t.type" (click)="toastService.remove(t.id)">
+        <div class="toast-indicator"></div>
+        <div class="toast-body">
+          <h4 class="toast-title">{{ t.title }}</h4>
+          <p class="toast-message">{{ t.message }}</p>
+        </div>
+        <button class="toast-close">✕</button>
+      </div>
+    }
+  </div>
+</div>
