@@ -6,7 +6,7 @@ GET  /api/v1/ocr/jobs/{id} → { id, status, progress, result, error_message }
 import uuid
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Header, BackgroundTasks, status
+from fastapi import APIRouter, Depends, HTTPException, Header, BackgroundTasks, Request, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -18,6 +18,7 @@ from app.schemas.ocr_jobs import (
     OcrJobStatusResponse,
 )
 from app.core.security import extract_user_id_from_header
+from app.core.ratelimit import limiter
 from app.workers.ocr_worker import dispatch_ocr_job
 
 logger = logging.getLogger("ocr_jobs_api")
@@ -40,8 +41,10 @@ def _require_user_id(authorization: Optional[str]) -> str:
     status_code=status.HTTP_202_ACCEPTED,
     tags=["OCR Jobs"],
 )
+@limiter.limit("10/minute")
 async def create_ocr_job(
-    request: OcrJobCreateRequest,
+    request: Request,
+    body: OcrJobCreateRequest,
     background_tasks: BackgroundTasks,
     authorization: Optional[str] = Header(None),
     db: Session = Depends(get_db),
@@ -58,9 +61,9 @@ async def create_ocr_job(
         raise HTTPException(status_code=400, detail="Identifiant utilisateur invalide.")
 
     # Contrôle anti-IDOR si page_id est fournie
-    if request.page_id:
+    if body.page_id:
         try:
-            page_uuid = uuid.UUID(request.page_id)
+            page_uuid = uuid.UUID(body.page_id)
             page = (
                 db.query(NotebookPage)
                 .join(Lesson, NotebookPage.lesson_id == Lesson.id)
@@ -86,18 +89,18 @@ async def create_ocr_job(
     # Préparation du payload sérialisable
     strokes_dump = [
         s.model_dump() if hasattr(s, "model_dump") else s
-        for s in request.strokes
+        for s in body.strokes
     ]
     opts_dump = (
-        request.options.model_dump()
-        if hasattr(request.options, "model_dump")
-        else (request.options or {})
+        body.options.model_dump()
+        if hasattr(body.options, "model_dump")
+        else (body.options or {})
     )
 
     payload = {
         "strokes": strokes_dump,
-        "canvasWidth": request.canvasWidth,
-        "canvasHeight": request.canvasHeight,
+        "canvasWidth": body.canvasWidth,
+        "canvasHeight": body.canvasHeight,
         "options": opts_dump,
         "user_id": user_id,
     }

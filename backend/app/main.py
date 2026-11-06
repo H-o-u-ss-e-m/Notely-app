@@ -20,6 +20,8 @@ from app.core.logging import setup_logging
 from app.core.body_limit import BodySizeLimitMiddleware
 from app.core.errors import register_error_handlers
 from app.core.request_context import RequestIdMiddleware
+from app.core.ratelimit import limiter, rate_limit_handler
+from slowapi.errors import RateLimitExceeded
 from app.core.device import get_optimal_device
 from app.ml.trocr_engine import trocr_engine
 from app.db.session import check_db_connection
@@ -74,16 +76,17 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configuration CORS
-# allow_origin_regex accepte TOUT localhost (n'importe quel port) + ngrok + réseau local
-# Ceci est compatible avec allow_credentials=True contrairement à allow_origins=["*"]
+# Rate Limiting (SEC-6 : slowapi)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+
+# Configuration CORS — source unique de vérité sans allow_origin_regex (SEC-7)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,  # source unique : variable CORS_ORIGINS
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://.*\.ngrok-free\.app$|^https://.*\.ngrok-free\.dev$|^https://.*\.ngrok\.io$",
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Client-Version"],
     max_age=3600,
 )
 

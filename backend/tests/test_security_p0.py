@@ -187,3 +187,183 @@ def test_own_stroke_ids_are_not_flagged():
     page = _page_with(["mine"])
     PageRepository().save_strokes(db, page, [{"id": "mine", "points": []}])
     db.query.assert_not_called()  # aucun ID etranger : pas de requete de collision
+
+
+# -- Chantier 3 (Plan v2 §5.1 - §5.6) : Argon2id, Refresh Rotation, Anti-IDOR, Lockout, CORS, Code mort --
+
+def test_sec2_argon2id_and_transparent_bcrypt_rehash():
+    import bcrypt
+    from app.core.security import hash_password, verify_password, fake_verify
+
+    # 1. Nouveau hash = Argon2id
+    h_argon = hash_password("MonSuperMotDePasse!2026")
+    assert h_argon.startswith("$argon2id$")
+    ok, needs_rehash = verify_password(h_argon, "MonSuperMotDePasse!2026")
+    assert ok is True
+    assert needs_rehash is False
+
+    ok_bad, _ = verify_password(h_argon, "MauvaisMotDePasse")
+    assert ok_bad is False
+
+    # 2. Ancien hash bcrypt -> reconnu + needs_rehash = True
+    h_bcrypt = bcrypt.hashpw(b"AncienMotDePasse", bcrypt.gensalt()).decode("utf-8")
+    ok_bc, rehash_bc = verify_password(h_bcrypt, "AncienMotDePasse")
+    assert ok_bc is True
+    assert rehash_bc is True
+
+    # 3. Anti-énumération fake_verify
+    fake_verify("n'importe quoi")
+
+
+def test_sec3_refresh_rotation_and_reuse_detection():
+    import uuid
+    from app.modules.auth.service import issue_refresh, rotate_refresh
+    from app.db.models.user import RefreshToken
+
+    store = []
+
+    class FakeQuery:
+        def __init__(self, items, filters=None):
+            self.items = items
+            self.filters = filters or {}
+
+        def filter_by(self, **kwargs):
+            f = dict(self.filters)
+            f.update(kwargs)
+            return FakeQuery(self.items, f)
+
+        def filter(self, *args):
+            return self
+
+        def with_for_update(self):
+            return self
+
+        def _matched(self):
+            res = []
+            for it in self.items:
+                match = True
+                for k, v in self.filters.items():
+                    if getattr(it, k, None) != v:
+                        match = False
+                        break
+                if match:
+                    res.append(it)
+            return res
+
+        def first(self):
+            m = self._matched()
+            return m[0] if m else None
+
+        def update(self, values: dict, synchronize_session=False):
+            m = self._matched()
+            for it in m:
+                for k, v in values.items():
+                    setattr(it, k, v)
+            return len(m)
+
+    class FakeSession:
+        def add(self, obj):
+            if getattr(obj, "id", None) is None:
+                obj.id = uuid.uuid4()
+            store.append(obj)
+
+        def flush(self):
+            pass
+
+        def commit(self):
+            pass
+
+        def query(self, model):
+            return FakeQuery(store)
+
+    db = FakeSession()
+    uid = uuid.uuid4()
+
+    # 1. Émission initiale
+    raw1 = issue_refresh(db, uid)
+    assert len(store) == 1
+    fam_id = store[0].family_id
+    assert fam_id is not None
+
+    # 2. Rotation normale : raw1 -> raw2 dans la même famille
+    ret_uid, raw2 = rotate_refresh(db, raw1)
+    assert ret_uid == uid
+    assert raw2 != raw1
+    assert len(store) == 2
+    assert store[0].used_at is not None
+    assert store[1].family_id == fam_id
+    assert store[1].revoked_at is None
+
+    # 3. REJEU de raw1 -> détecté, toute la famille (dont raw2) est révoquée !
+    with pytest.raises(ValueError, match="refresh_reuse_detected"):
+        rotate_refresh(db, raw1)
+
+    assert store[0].revoked_at is not None
+    assert store[1].revoked_at is not None
+
+    # 4. raw2 ne peut plus être utilisé non plus
+    with pytest.raises(ValueError, match="refresh_reuse_detected"):
+        rotate_refresh(db, raw2)
+
+
+def test_sec4_anti_idor_deps_returns_404_for_other_user():
+    from fastapi import HTTPException
+    from app.api.deps import get_owned_page, get_owned_lesson, get_owned_subject
+
+    db = MagicMock()
+    # Simuler qu'aucune ressource n'appartient à user B
+    db.query.return_value.filter.return_value.first.return_value = None
+    db.query.return_value.join.return_value.filter.return_value.first.return_value = None
+    db.query.return_value.join.return_value.join.return_value.filter.return_value.first.return_value = None
+
+    with pytest.raises(HTTPException) as exc_subj:
+        get_owned_subject("22222222-2222-2222-2222-222222222222", uid="user-B", db=db)
+    assert exc_subj.value.status_code == 404
+
+    with pytest.raises(HTTPException) as exc_les:
+        get_owned_lesson("22222222-2222-2222-2222-222222222222", uid="user-B", db=db)
+    assert exc_les.value.status_code == 404
+
+    with pytest.raises(HTTPException) as exc_page:
+        get_owned_page("22222222-2222-2222-2222-222222222222", uid="user-B", db=db)
+    assert exc_page.value.status_code == 404
+
+
+def test_sec6_progressive_login_lockout():
+    from fastapi import HTTPException
+    from app.core.ratelimit import check_login_lockout, record_login_failure, reset_login_failures
+
+    email = "lockout-test@example.com"
+    reset_login_failures(email)
+
+    # 4 échecs : pas encore verrouillé
+    for _ in range(4):
+        record_login_failure(email)
+    check_login_lockout(email)  # ne lève pas
+
+    # 5e échec : verrouillage progressif (HTTP 429 + Retry-After)
+    record_login_failure(email)
+    with pytest.raises(HTTPException) as exc:
+        check_login_lockout(email)
+    assert exc.value.status_code == 429
+    assert int(exc.value.headers["Retry-After"]) >= 30
+
+    # Reset après succès
+    reset_login_failures(email)
+    check_login_lockout(email)
+
+
+def test_sec7_cors_disallows_ngrok_regex_bypass():
+    r = client.options(
+        "/api/v1/health",
+        headers={"Origin": "https://attacker.ngrok-free.app", "Access-Control-Request-Method": "GET"},
+    )
+    assert "access-control-allow-origin" not in r.headers
+
+
+def test_sec56_dead_code_removed():
+    import os
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    assert not os.path.exists(os.path.join(root, "app", "api", "auth.py"))
+    assert not os.path.exists(os.path.join(root, "app", "ml", "preprocessing.py"))
+

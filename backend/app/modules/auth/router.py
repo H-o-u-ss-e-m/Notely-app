@@ -1,14 +1,16 @@
 """
 Routeur Auth — /api/v1/auth/*
-Utilise PostgreSQL via AuthService (plus aucun stockage en mémoire).
+Utilise PostgreSQL via AuthService (Argon2id + rotation de refresh tokens + rate limit — SEC-2 / SEC-3 / SEC-6).
 """
-from fastapi import APIRouter, HTTPException, status, Header, Depends
+from fastapi import APIRouter, HTTPException, Request, status, Header, Depends
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.schemas.auth import UserCreateDTO, UserLoginDTO, UserResponseDTO, TokenDTO, RefreshTokenRequestDTO
 from app.modules.auth.service import auth_service
 from app.core.security import decode_access_token
+from app.core.ratelimit import limiter
+from app.api.deps import current_user_id
 
 router = APIRouter()
 
@@ -23,7 +25,8 @@ async def register(dto: UserCreateDTO, db: Session = Depends(get_db)):
 
 
 @router.post("/auth/login", response_model=TokenDTO, summary="Connexion Utilisateur")
-async def login(dto: UserLoginDTO, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+async def login(request: Request, dto: UserLoginDTO, db: Session = Depends(get_db)):
     try:
         return auth_service.login(db, dto)
     except ValueError as e:
@@ -38,9 +41,15 @@ async def refresh(dto: RefreshTokenRequestDTO, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
 
-@router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Déconnexion")
+@router.post("/auth/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Déconnexion (famille courante)")
 async def logout(dto: RefreshTokenRequestDTO, db: Session = Depends(get_db)):
     auth_service.logout(db, dto.refresh_token)
+    return None
+
+
+@router.post("/auth/logout-all", status_code=status.HTTP_204_NO_CONTENT, summary="Déconnexion de tous les appareils")
+async def logout_all(uid: str = Depends(current_user_id), db: Session = Depends(get_db)):
+    auth_service.logout_all(db, uid)
     return None
 
 

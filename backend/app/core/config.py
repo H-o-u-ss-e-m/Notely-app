@@ -98,8 +98,9 @@ class Settings:
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     if JWT_ALGORITHM not in ("HS256",):
         raise ConfigError("JWT_ALGORITHM non supporté (HS256 uniquement).")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
+    REFRESH_TOKEN_EXPIRE_DAYS: int = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
+    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
     # TrOCR
     TROCR_MODEL: str = os.getenv("TROCR_MODEL", "microsoft/trocr-base-handwritten")

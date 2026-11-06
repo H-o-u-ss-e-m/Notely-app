@@ -1,70 +1,65 @@
 """
 Routeur Courses — /api/v1/courses/*
-Utilise PostgreSQL via CourseService. Toutes les routes sont authentifiées.
+Utilise PostgreSQL via CourseService et les dépendances anti-IDOR `get_owned_*` (SEC-4 / SEC-6).
 """
-from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Response, Header, Depends, status
+from typing import List
+from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import Session
 from app.db.session import get_db
+from app.db.models.course import Subject, Lesson
+from app.api.deps import current_user_id, get_owned_subject, get_owned_lesson
+from app.core.ratelimit import limiter
 from app.schemas.courses import (
     SubjectEntity, SubjectCreateDTO, SubjectUpdateDTO,
     LessonEntity, LessonCreateDTO, LessonUpdateDTO
 )
 from app.schemas.structural import PDFRawExportRequest, StructuralHTRRequest
-from app.modules.courses.service import course_service
+from app.modules.courses.service import course_service, _subject_to_entity, _lesson_to_entity
 from app.modules.courses.repository import StrokeIdConflict
 from app.services.pdf_raw_generator import pdf_raw_generator_service
 from app.services.pdf_generator_service import pdf_generator_service
 from app.services.structural_htr_service import structural_htr_service
-from app.core.security import extract_user_id_from_header
 
 router = APIRouter()
-
-
-def _auth(authorization: Optional[str]) -> str:
-    """Extrait le user_id ou lève 401."""
-    user_id = extract_user_id_from_header(authorization)
-    if user_id == "usr-guest":
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentification requise")
-    return user_id
 
 
 # ── Matières ────────────────────────────────────────────────────────────────
 
 @router.get("/courses/subjects", response_model=List[SubjectEntity])
-async def get_all_subjects(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
+async def get_all_subjects(user_id: str = Depends(current_user_id), db: Session = Depends(get_db)):
     return course_service.list_subjects(db, user_id)
 
 
 @router.get("/courses/subjects/{subject_id}", response_model=SubjectEntity)
-async def get_subject(subject_id: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
-    subj = course_service.get_subject(db, subject_id, user_id)
-    if not subj:
-        raise HTTPException(status_code=404, detail="Matière introuvable")
-    return subj
+async def get_subject(subj: Subject = Depends(get_owned_subject)):
+    return _subject_to_entity(subj)
 
 
 @router.post("/courses/subjects", response_model=SubjectEntity, status_code=201)
-async def create_subject(dto: SubjectCreateDTO, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
+async def create_subject(dto: SubjectCreateDTO, user_id: str = Depends(current_user_id), db: Session = Depends(get_db)):
     return course_service.create_subject(db, dto, user_id)
 
 
 @router.put("/courses/subjects/{subject_id}", response_model=SubjectEntity)
-async def update_subject(subject_id: str, dto: SubjectUpdateDTO, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
-    subj = course_service.update_subject(db, subject_id, dto, user_id)
-    if not subj:
+async def update_subject(
+    dto: SubjectUpdateDTO,
+    subj: Subject = Depends(get_owned_subject),
+    user_id: str = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    updated = course_service.update_subject(db, str(subj.id), dto, user_id)
+    if not updated:
         raise HTTPException(status_code=404, detail="Matière introuvable")
-    return subj
+    return updated
 
 
 @router.delete("/courses/subjects/{subject_id}", status_code=204)
-async def delete_subject(subject_id: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
-    if not course_service.delete_subject(db, subject_id, user_id):
+async def delete_subject(
+    subj: Subject = Depends(get_owned_subject),
+    user_id: str = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    if not course_service.delete_subject(db, str(subj.id), user_id):
         raise HTTPException(status_code=404, detail="Matière introuvable")
     return None
 
@@ -72,8 +67,7 @@ async def delete_subject(subject_id: str, authorization: Optional[str] = Header(
 # ── Cours ────────────────────────────────────────────────────────────────────
 
 @router.post("/courses/lessons", response_model=LessonEntity, status_code=201)
-async def create_lesson(dto: LessonCreateDTO, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
+async def create_lesson(dto: LessonCreateDTO, user_id: str = Depends(current_user_id), db: Session = Depends(get_db)):
     lesson = course_service.create_lesson(db, dto, user_id)
     if not lesson:
         raise HTTPException(status_code=404, detail="Matière de rattachement introuvable")
@@ -81,32 +75,45 @@ async def create_lesson(dto: LessonCreateDTO, authorization: Optional[str] = Hea
 
 
 @router.get("/courses/subjects/{subject_id}/lessons/{lesson_id}", response_model=LessonEntity)
-async def get_lesson(subject_id: str, lesson_id: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
-    lesson = course_service.get_lesson(db, lesson_id, user_id)
-    if not lesson:
+async def get_lesson(
+    subj: Subject = Depends(get_owned_subject),
+    lesson: Lesson = Depends(get_owned_lesson),
+):
+    if lesson.subject_id != subj.id:
         raise HTTPException(status_code=404, detail="Cours introuvable")
-    return lesson
+    return _lesson_to_entity(lesson)
 
 
 @router.put("/courses/subjects/{subject_id}/lessons/{lesson_id}", response_model=LessonEntity)
-async def update_lesson(subject_id: str, lesson_id: str, dto: LessonUpdateDTO,
-                        authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
+async def update_lesson(
+    dto: LessonUpdateDTO,
+    subj: Subject = Depends(get_owned_subject),
+    lesson: Lesson = Depends(get_owned_lesson),
+    user_id: str = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    if lesson.subject_id != subj.id:
+        raise HTTPException(status_code=404, detail="Cours ou matière introuvable")
     try:
-        lesson = course_service.update_lesson(db, lesson_id, dto, user_id)
+        updated = course_service.update_lesson(db, str(lesson.id), dto, user_id)
     except StrokeIdConflict as exc:
         db.rollback()
         raise HTTPException(status_code=409, detail=str(exc))
-    if not lesson:
+    if not updated:
         raise HTTPException(status_code=404, detail="Cours ou matière introuvable")
-    return lesson
+    return updated
 
 
 @router.delete("/courses/subjects/{subject_id}/lessons/{lesson_id}", status_code=204)
-async def delete_lesson(subject_id: str, lesson_id: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
-    if not course_service.delete_lesson(db, lesson_id, user_id):
+async def delete_lesson(
+    subj: Subject = Depends(get_owned_subject),
+    lesson: Lesson = Depends(get_owned_lesson),
+    user_id: str = Depends(current_user_id),
+    db: Session = Depends(get_db),
+):
+    if lesson.subject_id != subj.id:
+        raise HTTPException(status_code=404, detail="Cours ou matière introuvable")
+    if not course_service.delete_lesson(db, str(lesson.id), user_id):
         raise HTTPException(status_code=404, detail="Cours ou matière introuvable")
     return None
 
@@ -114,16 +121,19 @@ async def delete_lesson(subject_id: str, lesson_id: str, authorization: Optional
 # ── Export PDF ──────────────────────────────────────────────────────────────
 
 @router.post("/courses/subjects/{subject_id}/lessons/{lesson_id}/export/pdf-raw")
-async def export_pdf_raw(subject_id: str, lesson_id: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
-    subj = course_service.get_subject(db, subject_id, user_id)
-    lesson = course_service.get_lesson(db, lesson_id, user_id)
-    if not subj or not lesson:
+@limiter.limit("5/minute")
+async def export_pdf_raw(
+    request: Request,
+    subj: Subject = Depends(get_owned_subject),
+    lesson: Lesson = Depends(get_owned_lesson),
+):
+    if lesson.subject_id != subj.id:
         raise HTTPException(status_code=404, detail="Cours ou matière introuvable")
+    lesson_dto = _lesson_to_entity(lesson)
     raw_req = PDFRawExportRequest(
         subject=subj.name,
         lessonTitle=lesson.title,
-        pages=[p.dict() for p in lesson.pages] if lesson.pages else []
+        pages=[p.dict() for p in lesson_dto.pages] if lesson_dto.pages else []
     )
     pdf_bytes = pdf_raw_generator_service.generate_raw_pdf_bytes(raw_req)
     return Response(content=pdf_bytes, media_type="application/pdf",
@@ -131,18 +141,22 @@ async def export_pdf_raw(subject_id: str, lesson_id: str, authorization: Optiona
 
 
 @router.post("/courses/subjects/{subject_id}/lessons/{lesson_id}/export/pdf-ai")
-async def export_pdf_ai(subject_id: str, lesson_id: str, authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
-    user_id = _auth(authorization)
-    subj = course_service.get_subject(db, subject_id, user_id)
-    lesson = course_service.get_lesson(db, lesson_id, user_id)
-    if not subj or not lesson:
+@limiter.limit("5/minute")
+async def export_pdf_ai(
+    request: Request,
+    subj: Subject = Depends(get_owned_subject),
+    lesson: Lesson = Depends(get_owned_lesson),
+    user_id: str = Depends(current_user_id),
+):
+    if lesson.subject_id != subj.id:
         raise HTTPException(status_code=404, detail="Cours ou matière introuvable")
+    lesson_dto = _lesson_to_entity(lesson)
     htr_req = StructuralHTRRequest(
-        pages=[p.dict() for p in lesson.pages] if lesson.pages else [],
+        pages=[p.dict() for p in lesson_dto.pages] if lesson_dto.pages else [],
         subject=subj.name,
         lessonTitle=lesson.title
     )
-    htr_res = structural_htr_service.process_structural_strokes(htr_req)
+    htr_res = structural_htr_service.process_structural_strokes(htr_req, user_id=str(user_id))
     pdf_bytes = pdf_generator_service.generate_pdf_bytes(htr_res)
     return Response(content=pdf_bytes, media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="{subj.name}_{lesson.title}_AI.pdf"'})

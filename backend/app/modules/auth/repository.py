@@ -1,11 +1,14 @@
 """
-AuthRepository — Accès PostgreSQL pour les utilisateurs et refresh tokens.
+AuthRepository — Accès PostgreSQL pour les utilisateurs et refresh tokens (SEC-2 / SEC-3).
 """
 import hashlib
+import secrets
+import uuid
 from datetime import datetime, timedelta
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.db.models.user import User, RefreshToken
+from app.core.config import settings
 
 
 class UserRepository:
@@ -14,13 +17,13 @@ class UserRepository:
     def get_by_email(self, db: Session, email: str) -> Optional[User]:
         return db.query(User).filter(
             User.email == email.lower().strip(),
-            User.is_active == True
+            User.is_active == True  # noqa: E712
         ).first()
 
     def get_by_id(self, db: Session, user_id: str) -> Optional[User]:
         return db.query(User).filter(
             User.id == user_id,
-            User.is_active == True
+            User.is_active == True  # noqa: E712
         ).first()
 
     def create(self, db: Session, email: str, password_hash: str,
@@ -32,7 +35,7 @@ class UserRepository:
             role=role,
         )
         db.add(user)
-        db.flush()   # Obtenir l'ID sans commit
+        db.flush()
         return user
 
     def email_exists(self, db: Session, email: str) -> bool:
@@ -42,15 +45,36 @@ class UserRepository:
 
 
 class RefreshTokenRepository:
-    """Gestion des refresh tokens persistés."""
+    """Gestion des refresh tokens opaques avec rotation par famille (SEC-3)."""
 
     @staticmethod
     def _hash(token: str) -> str:
-        return hashlib.sha256(token.encode()).hexdigest()
+        return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
-    def create(self, db: Session, user_id, token: str, expires_days: int = 7) -> RefreshToken:
+    def issue(
+        self,
+        db: Session,
+        user_id,
+        family_id=None,
+        expires_days: int = settings.REFRESH_TOKEN_EXPIRE_DAYS,
+        user_agent: Optional[str] = None,
+    ) -> str:
+        raw = secrets.token_urlsafe(32)
         rt = RefreshToken(
             user_id=user_id,
+            family_id=family_id or uuid.uuid4(),
+            token_hash=self._hash(raw),
+            expires_at=datetime.utcnow() + timedelta(days=expires_days),
+            user_agent=user_agent,
+        )
+        db.add(rt)
+        db.flush()
+        return raw
+
+    def create(self, db: Session, user_id, token: str, expires_days: int = settings.REFRESH_TOKEN_EXPIRE_DAYS, family_id=None) -> RefreshToken:
+        rt = RefreshToken(
+            user_id=user_id,
+            family_id=family_id or uuid.uuid4(),
             token_hash=self._hash(token),
             expires_at=datetime.utcnow() + timedelta(days=expires_days),
         )
@@ -58,29 +82,44 @@ class RefreshTokenRepository:
         db.flush()
         return rt
 
-    def get_valid(self, db: Session, token: str) -> Optional[RefreshToken]:
-        h = self._hash(token)
-        return db.query(RefreshToken).filter(
-            RefreshToken.token_hash == h,
-            RefreshToken.revoked_at == None,
-            RefreshToken.expires_at > datetime.utcnow()
-        ).first()
+    def get_by_raw_for_update(self, db: Session, raw: str) -> Optional[RefreshToken]:
+        h = self._hash(raw)
+        return (
+            db.query(RefreshToken)
+            .filter_by(token_hash=h)
+            .with_for_update()
+            .first()
+        )
+
+    def revoke_family(self, db: Session, family_id) -> int:
+        now = datetime.utcnow()
+        return (
+            db.query(RefreshToken)
+            .filter_by(family_id=family_id)
+            .update({"revoked_at": now}, synchronize_session=False)
+        )
 
     def revoke(self, db: Session, token: str) -> bool:
         h = self._hash(token)
-        rt = db.query(RefreshToken).filter(RefreshToken.token_hash == h).first()
+        rt = db.query(RefreshToken).filter_by(token_hash=h).first()
         if rt:
-            rt.revoked_at = datetime.utcnow()
+            now = datetime.utcnow()
+            rt.revoked_at = now
+            if getattr(rt, "family_id", None):
+                self.revoke_family(db, rt.family_id)
             db.flush()
             return True
         return False
 
     def revoke_all_for_user(self, db: Session, user_id) -> int:
-        """Révoque toutes les sessions d'un utilisateur (logout complet)."""
-        count = db.query(RefreshToken).filter(
-            RefreshToken.user_id == user_id,
-            RefreshToken.revoked_at == None
-        ).update({"revoked_at": datetime.utcnow()})
+        """Révoque toutes les familles de sessions d'un utilisateur (logout-all)."""
+        now = datetime.utcnow()
+        count = (
+            db.query(RefreshToken)
+            .filter_by(user_id=user_id)
+            .update({"revoked_at": now}, synchronize_session=False)
+        )
+        db.flush()
         return count
 
 

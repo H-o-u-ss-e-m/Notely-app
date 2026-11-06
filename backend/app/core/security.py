@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 from typing import Optional
-import bcrypt
-from jose import JWTError, jwt
-import os
+import secrets
 import uuid
+import bcrypt
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError, InvalidHashError
+from jose import JWTError, jwt
 
-# Utilise la config centralisée (ou variables d'environnement directement)
-from app.core.config import settings  # noqa: E402  (valide le secret au démarrage)
+from app.core.config import settings  # noqa: E402
 
 SECRET_KEY = settings.JWT_SECRET_KEY
 REFRESH_SECRET_KEY = settings.JWT_SECRET_KEY + "-refresh"
@@ -14,30 +15,70 @@ ALGORITHM = settings.JWT_ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
 
-def get_password_hash(password: str) -> str:
-    pwd_bytes = password.encode('utf-8')
-    salt = bcrypt.gensalt()
-    return bcrypt.hashpw(pwd_bytes, salt).decode('utf-8')
+# SEC-2 : Argon2id avec re-hachage transparent des anciens hash bcrypt
+ph = PasswordHasher(time_cost=3, memory_cost=64 * 1024, parallelism=2)
+_DUMMY_HASH = ph.hash("notely-dummy-password")
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+
+def hash_password(pw: str) -> str:
+    return ph.hash(pw)
+
+
+get_password_hash = hash_password
+
+
+def verify_password(stored: str, pw: str) -> tuple[bool, bool]:
+    """Vérifie le mot de passe et retourne (ok, needs_rehash)."""
+    if not stored or not pw:
+        return False, False
+    # Compatibilité au cas où l'appelant inverserait (plain, hash)
+    if not (stored.startswith("$argon2") or stored.startswith("$2")) and (
+        pw.startswith("$argon2") or pw.startswith("$2")
+    ):
+        stored, pw = pw, stored
+
+    if stored.startswith("$2"):
+        try:
+            ok = bcrypt.checkpw(pw.encode("utf-8"), stored.encode("utf-8"))
+            return ok, ok
+        except Exception:
+            return False, False
+
     try:
-        pwd_bytes = plain_password.encode('utf-8')
-        hash_bytes = hashed_password.encode('utf-8')
-        return bcrypt.checkpw(pwd_bytes, hash_bytes)
+        ph.verify(stored, pw)
+        return True, ph.check_needs_rehash(stored)
+    except (VerifyMismatchError, InvalidHashError, Exception):
+        return False, False
+
+
+def fake_verify(pw: str) -> None:
+    """Anti-énumération : consomme le même temps CPU qu'un vrai Argon2id."""
+    try:
+        ph.verify(_DUMMY_HASH, pw)
     except Exception:
-        return False
+        pass
+
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire, "iat": datetime.utcnow(), "jti": uuid.uuid4().hex, "type": "access"})
+    expire = datetime.utcnow() + (
+        expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": datetime.utcnow(),
+            "jti": uuid.uuid4().hex,
+            "type": "access",
+        }
+    )
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS))
-    to_encode.update({"exp": expire, "iat": datetime.utcnow(), "jti": uuid.uuid4().hex, "type": "refresh"})
-    return jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
+
+def create_refresh_token(data: Optional[dict] = None, expires_delta: Optional[timedelta] = None) -> str:
+    """SEC-3 : Refresh token opaque 256 bits (stocké haché SHA-256 en base)."""
+    return secrets.token_urlsafe(32)
+
 
 def decode_access_token(token: str) -> Optional[dict]:
     try:
@@ -48,6 +89,7 @@ def decode_access_token(token: str) -> Optional[dict]:
     except JWTError:
         return None
 
+
 def decode_refresh_token(token: str) -> Optional[dict]:
     try:
         payload = jwt.decode(token, REFRESH_SECRET_KEY, algorithms=[ALGORITHM])
@@ -56,6 +98,7 @@ def decode_refresh_token(token: str) -> Optional[dict]:
         return payload
     except JWTError:
         return None
+
 
 def extract_user_id_from_header(authorization: Optional[str]) -> str:
     """

@@ -31,14 +31,17 @@ class User(Base):
 
 
 class RefreshToken(Base):
-    """Table des refresh tokens (sessions renouvelables)."""
+    """Table des refresh tokens (sessions renouvelables avec rotation par famille — SEC-3)."""
     __tablename__ = "refresh_tokens"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    token_hash = Column(String(255), nullable=False, unique=True)  # Hash SHA256 du token
+    family_id = Column(UUID(as_uuid=True), nullable=False, index=True, default=uuid.uuid4)
+    token_hash = Column(String(255), nullable=False, unique=True)  # Hash SHA256 du token opaque
     expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
     revoked_at = Column(DateTime, nullable=True)
+    user_agent = Column(String(255), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     # Relations
@@ -46,7 +49,7 @@ class RefreshToken(Base):
 
     @property
     def is_valid(self) -> bool:
-        return self.revoked_at is None and self.expires_at > datetime.utcnow()
+        return self.revoked_at is None and self.used_at is None and self.expires_at > datetime.utcnow()
 
     def __repr__(self):
-        return f"<RefreshToken user_id={self.user_id}>"
+        return f"<RefreshToken user_id={self.user_id} family_id={self.family_id}>"
