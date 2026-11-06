@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/env_config.dart';
+import 'auth_interceptor.dart';
 import '../../models/stroke_model.dart';
 import '../../models/recognition_model.dart';
 import '../../models/structural_model.dart';
@@ -14,45 +16,67 @@ class ApiClient {
   static String? refreshToken;
   static Map<String, dynamic>? currentUser;
 
-  // Timer de refresh automatique du token (55 min avant l'expiration de 60 min)
-  static Timer? _refreshTimer;
-  static const Duration _refreshBefore = Duration(minutes: 55);
+  static final SecureTokenStore secureStorage = SecureTokenStore();
+  static Dio? _dioInstance;
 
-  // ── Session persistence ─────────────────────────────────────────────────
+  static Dio get dio {
+    if (_dioInstance == null) {
+      final d = Dio(BaseOptions(
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 35),
+        headers: {'Content-Type': 'application/json'},
+      ));
+      d.interceptors.add(AuthInterceptor(
+        dio: d,
+        storage: secureStorage,
+        onLogout: clearSession,
+        onTokensUpdated: (access, refresh) {
+          authToken = access;
+          if (refresh != null) refreshToken = refresh;
+        },
+      ));
+      _dioInstance = d;
+    }
+    return _dioInstance!;
+  }
 
-  static File get _sessionFile {
-    final tempDir = Directory.systemTemp;
-    return File('${tempDir.path}/notely_user_session.json');
+  // ── Session persistence sécurisée (Plan v2 §5.8 — FLT-2) ─────────────────
+  // Suppression du fichier en clair `notely_user_session.json` et du Timer 55 min.
+
+  static Future<void> _purgeLegacyPlaintextFile() async {
+    if (kIsWeb) return;
+    try {
+      final legacyFile = File('${Directory.systemTemp.path}/notely_user_session.json');
+      if (await legacyFile.exists()) {
+        await legacyFile.delete();
+      }
+    } catch (_) {}
   }
 
   static Future<void> saveSession(String token, String? refresh, Map<String, dynamic>? user) async {
     authToken    = token;
     refreshToken = refresh;
     currentUser  = user;
-    if (!kIsWeb) {
-      try {
-        await _sessionFile.writeAsString(
-          jsonEncode({'token': token, 'refresh': refresh, 'user': user}),
-          flush: true,
-        );
-      } catch (e) {
-        debugPrint('Erreur saveSession: $e');
-      }
+    await _purgeLegacyPlaintextFile();
+    await secureStorage.write(key: 'access', value: token);
+    if (refresh != null) {
+      await secureStorage.write(key: 'refresh', value: refresh);
     }
-    // Planifier le refresh automatique
-    _scheduleTokenRefresh();
+    if (user != null) {
+      await secureStorage.write(key: 'user', value: jsonEncode(user));
+    }
   }
 
   static Future<void> loadSession() async {
-    if (kIsWeb) return;
+    await _purgeLegacyPlaintextFile();
     try {
-      final file = _sessionFile;
-      if (await file.exists()) {
-        final data = jsonDecode(await file.readAsString());
-        authToken    = data['token'] as String?;
-        refreshToken = data['refresh'] as String?;
-        currentUser  = data['user'] as Map<String, dynamic>?;
-        if (authToken != null) _scheduleTokenRefresh();
+      final tok = await secureStorage.read(key: 'access');
+      final ref = await secureStorage.read(key: 'refresh');
+      final usrRaw = await secureStorage.read(key: 'user');
+      if (tok != null) authToken = tok;
+      if (ref != null) refreshToken = ref;
+      if (usrRaw != null && usrRaw.isNotEmpty) {
+        currentUser = jsonDecode(usrRaw) as Map<String, dynamic>?;
       }
     } catch (e) {
       debugPrint('Erreur loadSession: $e');
@@ -60,54 +84,11 @@ class ApiClient {
   }
 
   static Future<void> clearSession() async {
-    _refreshTimer?.cancel();
-    _refreshTimer = null;
-    authToken     = null;
-    refreshToken  = null;
-    currentUser   = null;
-    if (!kIsWeb) {
-      try {
-        if (await _sessionFile.exists()) await _sessionFile.delete();
-      } catch (_) {}
-    }
-  }
-
-  // ── Auto Refresh Token ──────────────────────────────────────────────────
-
-  static void _scheduleTokenRefresh() {
-    _refreshTimer?.cancel();
-    if (refreshToken == null) return;
-    _refreshTimer = Timer(_refreshBefore, () async {
-      await _doRefresh();
-    });
-  }
-
-  static Future<void> _doRefresh() async {
-    if (refreshToken == null) return;
-    try {
-      final url = Uri.parse('${EnvConfig.baseUrl}/auth/refresh');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'refresh_token': refreshToken}),
-      ).timeout(const Duration(seconds: 10));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final newAccess  = data['access_token'] as String?;
-        final newRefresh = data['refresh_token'] as String?;
-        final user       = data['user'] as Map<String, dynamic>?;
-        if (newAccess != null) {
-          await saveSession(newAccess, newRefresh ?? refreshToken, user ?? currentUser);
-          debugPrint('[ApiClient] Token rafraîchi automatiquement.');
-        }
-      } else {
-        debugPrint('[ApiClient] Refresh échoué (${response.statusCode}) — session expirée.');
-        await clearSession();
-      }
-    } catch (e) {
-      debugPrint('[ApiClient] Erreur refresh token: $e');
-    }
+    authToken    = null;
+    refreshToken = null;
+    currentUser  = null;
+    await _purgeLegacyPlaintextFile();
+    await secureStorage.deleteAll();
   }
 
   // ── Headers ─────────────────────────────────────────────────────────────
@@ -184,6 +165,14 @@ class ApiClient {
         ).timeout(const Duration(seconds: 5));
       } catch (_) {}
     }
+    await clearSession();
+  }
+
+  static Future<void> logoutAll() async {
+    try {
+      final url = Uri.parse('${EnvConfig.baseUrl}/auth/logout-all');
+      await http.post(url, headers: _getHeaders()).timeout(const Duration(seconds: 5));
+    } catch (_) {}
     await clearSession();
   }
 
@@ -291,7 +280,49 @@ class ApiClient {
     throw Exception('Erreur PDF brut (${response.statusCode})');
   }
 
-  // ── Courses ──────────────────────────────────────────────────────────────
+  // ── Courses & Differential Strokes (DB-3 / §5.7) ─────────────────────────
+
+  static Future<Map<String, dynamic>?> patchPageStrokes({
+    required String pageId,
+    required int baseVersion,
+    required List<StrokeModel> added,
+    List<String> removedClientIds = const [],
+  }) async {
+    try {
+      final url = Uri.parse('${EnvConfig.baseUrl}/pages/$pageId/strokes');
+      final response = await http.patch(
+        url,
+        headers: _getHeaders(),
+        body: jsonEncode({
+          'baseVersion': baseVersion,
+          'added': added.map((s) => s.toJson()).toList(),
+          'removedClientIds': removedClientIds,
+        }),
+      ).timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('Erreur patchPageStrokes: $e');
+    }
+    return null;
+  }
+
+  static Future<List<StrokeModel>> getPageStrokes(String pageId) async {
+    try {
+      final url = Uri.parse('${EnvConfig.baseUrl}/pages/$pageId/strokes');
+      final response = await http.get(url, headers: _getHeaders())
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        final list = (data['strokes'] as List<dynamic>? ?? []);
+        return list.map((s) => StrokeModel.fromJson(s as Map<String, dynamic>)).toList();
+      }
+    } catch (e) {
+      debugPrint('Erreur getPageStrokes: $e');
+    }
+    return [];
+  }
 
   static Future<SubjectModel?> createSubject(String name, String color) async {
     try {
@@ -380,7 +411,6 @@ class ApiClient {
           .post(url, headers: _getHeaders(), body: jsonEncode(feedbackData))
           .timeout(const Duration(seconds: 8));
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Envoi réussi, essayer de vider la file hors ligne
         flushOfflineFeedback();
         return true;
       }

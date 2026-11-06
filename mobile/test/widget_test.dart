@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/main.dart';
 import 'package:mobile/models/structural_model.dart';
 import 'package:mobile/features/notebook/screens/notebook_screen.dart';
+import 'package:mobile/core/network/api_client.dart';
 
 void main() {
   testWidgets('Notely smoke test', (WidgetTester tester) async {
@@ -51,5 +53,21 @@ void main() {
       expect(back.dx, closeTo(p.dx, 1e-5));
       expect(back.dy, closeTo(p.dy, 1e-5));
     }
+  });
+
+  test('ApiClient secure session storage & removal of plaintext notely_user_session.json (Mission 5 / Partie 5.8)', () async {
+    await ApiClient.saveSession('sec-access-1', 'sec-refresh-1', {'id': 'u1', 'email': 'u1@notely.app'});
+    final legacyFile = File('${Directory.systemTemp.path}/notely_user_session.json');
+    expect(await legacyFile.exists(), isFalse);
+
+    ApiClient.authToken = null;
+    ApiClient.refreshToken = null;
+    await ApiClient.loadSession();
+    expect(ApiClient.authToken, 'sec-access-1');
+    expect(ApiClient.refreshToken, 'sec-refresh-1');
+
+    await ApiClient.clearSession();
+    expect(ApiClient.authToken, isNull);
+    expect(ApiClient.refreshToken, isNull);
   });
 }
