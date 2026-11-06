@@ -1,11 +1,11 @@
 """
-Modèles SQLAlchemy — Matières (Subjects), Cours (Lessons), Pages et Tracés.
+Modèles SQLAlchemy — Matières (Subjects), Cours (Lessons), Pages et Tracés (DB-3).
 """
 import uuid
 from datetime import datetime
 from sqlalchemy import (
     Column, String, Integer, Float, DateTime,
-    ForeignKey, Text, UniqueConstraint, CheckConstraint
+    ForeignKey, Text, UniqueConstraint
 )
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
@@ -40,6 +40,7 @@ class Lesson(Base):
     subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False, index=True)
     title = Column(String(500), nullable=False)
     version = Column(Integer, nullable=False, default=1)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)  # Corbeille 30 jours (DB-3)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -82,7 +83,7 @@ class NotebookPage(Base):
         "Stroke",
         back_populates="page",
         cascade="all, delete-orphan",
-        order_by="Stroke.start_time"
+        order_by="Stroke.seq, Stroke.start_time"
     )
 
     def __repr__(self):
@@ -91,14 +92,18 @@ class NotebookPage(Base):
 
 class Stroke(Base):
     """
-    Table des tracés manuscrits.
-    Les points et bbox sont stockés en JSONB pour garder la flexibilité
-    et les performances des requêtes PostgreSQL sur données imbriquées.
+    Table des tracés manuscrits (DB-3).
+    Clé primaire interne UUID `id` + `client_id` unique par page (`uq_strokes_page_client`).
     """
     __tablename__ = "strokes"
+    __table_args__ = (
+        UniqueConstraint("page_id", "client_id", name="uq_strokes_page_client"),
+    )
 
-    id = Column(String(255), primary_key=True)  # ID venant du client (stable)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     page_id = Column(UUID(as_uuid=True), ForeignKey("notebook_pages.id", ondelete="CASCADE"), nullable=False, index=True)
+    client_id = Column(String(255), nullable=False)
+    seq = Column(Integer, nullable=False, default=0)
     tool = Column(String(50), nullable=False, default="pen")         # 'pen' | 'diagram' | 'eraser'
     content_type = Column(String(50), nullable=False, default="normal")  # 'normal' | 'h1'..'h6'
     color = Column(String(20), nullable=False, default="#000000")
@@ -107,10 +112,11 @@ class Stroke(Base):
     bbox = Column(JSONB, nullable=True)                              # {xMin, yMin, xMax, yMax}
     start_time = Column(Float, nullable=False, default=0.0)
     end_time = Column(Float, nullable=False, default=0.0)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     # Relations
     page = relationship("NotebookPage", back_populates="strokes")
 
     def __repr__(self):
-        return f"<Stroke {self.id} tool={self.tool}>"
+        return f"<Stroke id={self.id} client_id={self.client_id} tool={self.tool}>"

@@ -6,16 +6,17 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Request, Response, Depends
 from sqlalchemy.orm import Session
 from app.db.session import get_db
-from app.db.models.course import Subject, Lesson
-from app.api.deps import current_user_id, get_owned_subject, get_owned_lesson
+from app.db.models.course import Subject, Lesson, NotebookPage
+from app.api.deps import current_user_id, get_owned_subject, get_owned_lesson, get_owned_page
 from app.core.ratelimit import limiter
 from app.schemas.courses import (
     SubjectEntity, SubjectCreateDTO, SubjectUpdateDTO,
-    LessonEntity, LessonCreateDTO, LessonUpdateDTO
+    LessonEntity, LessonCreateDTO, LessonUpdateDTO,
+    StrokeDeltaDTO, PageStrokesResponseDTO,
 )
 from app.schemas.structural import PDFRawExportRequest, StructuralHTRRequest
-from app.modules.courses.service import course_service, _subject_to_entity, _lesson_to_entity
-from app.modules.courses.repository import StrokeIdConflict
+from app.modules.courses.service import course_service, _subject_to_entity, _lesson_to_entity, _stroke_to_dto
+from app.modules.courses.repository import StrokeIdConflict, page_repository
 from app.services.pdf_raw_generator import pdf_raw_generator_service
 from app.services.pdf_generator_service import pdf_generator_service
 from app.services.structural_htr_service import structural_htr_service
@@ -160,3 +161,52 @@ async def export_pdf_ai(
     pdf_bytes = pdf_generator_service.generate_pdf_bytes(htr_res)
     return Response(content=pdf_bytes, media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="{subj.name}_{lesson.title}_AI.pdf"'})
+
+
+# ── Synchronisation différentielle & Chargement paresseux des tracés (DB-3 / §5.7) ──
+
+@router.patch("/pages/{page_id}/strokes")
+@router.patch("/courses/pages/{page_id}/strokes")
+async def patch_strokes(
+    delta: StrokeDeltaDTO,
+    page: NotebookPage = Depends(get_owned_page),
+    db: Session = Depends(get_db),
+):
+    if delta.baseVersion != page.version:
+        raise HTTPException(
+            status_code=409,
+            detail={"code": "version_mismatch", "serverVersion": page.version},
+        )
+    added_for_repo = [
+        {
+            "id": s.id,
+            "points": [p.dict() if hasattr(p, "dict") else p for p in (s.points or [])],
+            "color": s.color or "#000000",
+            "width": s.width or 3.0,
+            "tool": s.tool or "pen",
+            "contentType": s.contentType or "normal",
+            "bbox": s.bbox.dict() if s.bbox else None,
+            "startTime": s.startTime,
+            "endTime": s.endTime,
+        }
+        for s in delta.added
+    ]
+    updated_page = page_repository.patch_strokes_delta(
+        db, page, added=added_for_repo, removed_client_ids=delta.removedClientIds
+    )
+    return {"pageId": str(updated_page.id), "version": updated_page.version}
+
+
+@router.get("/pages/{page_id}/strokes", response_model=PageStrokesResponseDTO)
+@router.get("/courses/pages/{page_id}/strokes", response_model=PageStrokesResponseDTO)
+async def get_page_strokes(
+    page: NotebookPage = Depends(get_owned_page),
+    db: Session = Depends(get_db),
+):
+    strokes = page_repository.list_active_strokes(db, page.id)
+    return PageStrokesResponseDTO(
+        pageId=str(page.id),
+        version=page.version,
+        strokes=[_stroke_to_dto(s) for s in strokes],
+    )
+

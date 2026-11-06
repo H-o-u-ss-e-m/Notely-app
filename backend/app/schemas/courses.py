@@ -92,3 +92,23 @@ class SubjectEntity(BaseModel):
     description: Optional[str] = ""
     lessons: List[LessonEntity] = []
     createdAt: Optional[str] = None
+
+
+class StrokeDeltaDTO(BaseModel):
+    """Delta différentiel pour PATCH /pages/{page_id}/strokes (DB-3 / §5.7)."""
+    baseVersion: int
+    added: List[StrokeDTO] = Field(default=[], max_length=MAX_STROKES_PER_REQUEST)
+    removedClientIds: List[str] = Field(default=[], max_length=MAX_STROKES_PER_REQUEST)
+
+    @model_validator(mode="after")
+    def _enforce_limits(self):
+        if sum(len(s.points) for s in self.added) > MAX_TOTAL_POINTS:
+            raise ValueError(f"Trop de points dans le delta (max {MAX_TOTAL_POINTS})")
+        return self
+
+
+class PageStrokesResponseDTO(BaseModel):
+    """Réponse pour GET /pages/{page_id}/strokes (chargement paresseux — §5.7)."""
+    pageId: str
+    version: int
+    strokes: List[StrokeDTO] = []

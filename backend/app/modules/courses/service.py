@@ -21,8 +21,10 @@ def _stroke_to_dto(stroke) -> StrokeDTO:
     if stroke.bbox:
         bbox = BoundingBoxDTO(**stroke.bbox)
     points = [PointDTO(**p) for p in (stroke.points or [])]
+    cid = getattr(stroke, "client_id", None)
+    stroke_id = cid if (isinstance(cid, str) and cid) else str(stroke.id)
     return StrokeDTO(
-        id=stroke.id,
+        id=stroke_id,
         points=points,
         startTime=stroke.start_time,
         endTime=stroke.end_time,
@@ -36,10 +38,15 @@ def _stroke_to_dto(stroke) -> StrokeDTO:
 
 
 def _page_to_dto(page: NotebookPage) -> NotebookPageDTO:
+    active_strokes = [
+        s for s in (page.strokes or [])
+        if getattr(s, "deleted_at", None) is None
+    ]
+    active_strokes.sort(key=lambda s: (getattr(s, "seq", 0) or 0, getattr(s, "start_time", 0.0) or 0.0))
     return NotebookPageDTO(
         id=str(page.id),
         pageNumber=page.page_number,
-        strokes=[_stroke_to_dto(s) for s in (page.strokes or [])],
+        strokes=[_stroke_to_dto(s) for s in active_strokes],
         redoStack=[],
         width=page.width,
         height=page.height,
@@ -60,12 +67,16 @@ def _lesson_to_entity(lesson: Lesson) -> LessonEntity:
 
 
 def _subject_to_entity(subject: Subject) -> SubjectEntity:
+    active_lessons = [
+        l for l in (subject.lessons or [])
+        if getattr(l, "deleted_at", None) is None
+    ]
     return SubjectEntity(
         id=str(subject.id),
         name=subject.name,
         color=subject.color,
         description=subject.description or "",
-        lessons=[_lesson_to_entity(l) for l in (subject.lessons or [])],
+        lessons=[_lesson_to_entity(l) for l in active_lessons],
         createdAt=subject.created_at.strftime("%Y-%m-%d") if subject.created_at else "",
     )
 
