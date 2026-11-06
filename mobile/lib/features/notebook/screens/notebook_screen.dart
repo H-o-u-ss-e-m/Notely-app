@@ -14,6 +14,8 @@ import '../../../core/network/api_client.dart';
 import '../../../core/config/env_config.dart';
 import '../widgets/notebook_painter.dart';
 import '../widgets/course_drawer.dart';
+import '../widgets/save_status_chip.dart';
+import '../../../core/localization/notely_translations.dart';
 import '../../dashboard/dashboard_screen.dart';
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -69,8 +71,16 @@ class _NotebookScreenState extends State<NotebookScreen> {
 
   // ── Auto-Save ─────────────────────────────────────────────────────────────
   Timer?  _autoSaveTimer;
+  Timer?  _autoSaveDebounceTimer;
   String  _lastSavedTime      = '';
   bool    _hasUnsavedChanges  = false;
+  SaveState _saveStatus       = SaveState.saved;
+
+  // ── Rejet de la paume & Badge Zoom HUD (Partie 4.4 & 4.5) ──────────────────
+  bool _penOnlyMode           = false;
+  bool _hasActivePen          = false;
+  bool _showZoomBadge         = false;
+  Timer? _zoomBadgeTimer;
 
   // ── Outils ────────────────────────────────────────────────────────────────
   String _activeTool        = 'pen';
@@ -247,6 +257,15 @@ class _NotebookScreenState extends State<NotebookScreen> {
 
     _transformationController.value = _makeMatrix(targetZoom, newTx, newTy);
     setState(() => _zoomLevel = targetZoom);
+    _triggerZoomBadge();
+  }
+
+  void _triggerZoomBadge() {
+    setState(() => _showZoomBadge = true);
+    _zoomBadgeTimer?.cancel();
+    _zoomBadgeTimer = Timer(const Duration(milliseconds: 1200), () {
+      if (mounted) setState(() => _showZoomBadge = false);
+    });
   }
 
   /// Construit une matrice affine 2D : scale + translation.
@@ -328,16 +347,21 @@ class _NotebookScreenState extends State<NotebookScreen> {
         _currentLesson == null) {
       return;
     }
+    setState(() => _saveStatus = SaveState.saving);
     final success = await ApiClient.updateLesson(
         _currentSubject!.id, _currentLesson!.id, _currentLesson!.title, _pages);
-    if (success && mounted) {
-      final now = DateTime.now();
-      setState(() {
+    if (!mounted) return;
+    final now = DateTime.now();
+    setState(() {
+      if (success) {
         _lastSavedTime =
             '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
         _hasUnsavedChanges = false;
-      });
-    }
+        _saveStatus = SaveState.saved;
+      } else {
+        _saveStatus = SaveState.error;
+      }
+    });
   }
 
   Future<void> _saveCourseManually() async {
@@ -345,7 +369,10 @@ class _NotebookScreenState extends State<NotebookScreen> {
     final les  = _currentLesson;
     if (subj == null || les == null) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _saveStatus = SaveState.saving;
+    });
     final now     = DateTime.now();
     final timeStr =
         '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
@@ -357,6 +384,9 @@ class _NotebookScreenState extends State<NotebookScreen> {
       if (success) {
         _lastSavedTime     = timeStr;
         _hasUnsavedChanges = false;
+        _saveStatus        = SaveState.saved;
+      } else {
+        _saveStatus        = SaveState.error;
       }
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -403,8 +433,8 @@ class _NotebookScreenState extends State<NotebookScreen> {
         redoStack:  [],
       ));
       _currentPageIndex  = _pages.length - 1;
-      _hasUnsavedChanges = true;
     });
+    _markDirtyWithDebounce();
   }
 
   void _deletePage() {
@@ -440,7 +470,30 @@ class _NotebookScreenState extends State<NotebookScreen> {
   //  indépendants du zoom et de la taille de l'écran.
   // ═══════════════════════════════════════════════════════════════════════════
 
+  void _markDirtyWithDebounce() {
+    setState(() {
+      _hasUnsavedChanges = true;
+      _saveStatus = SaveState.dirty;
+    });
+
+    _autoSaveDebounceTimer?.cancel();
+    _autoSaveDebounceTimer = Timer(const Duration(seconds: 2), () {
+      if (_hasUnsavedChanges && mounted) {
+        _autoSaveCourse();
+      }
+    });
+  }
+
   void _onPointerDown(PointerDownEvent event) {
+    // Rejet de la paume (Partie 4.4)
+    if (event.kind == PointerDeviceKind.stylus || event.kind == PointerDeviceKind.invertedStylus) {
+      _hasActivePen = true;
+    } else if (event.kind == PointerDeviceKind.touch) {
+      if (_penOnlyMode || _hasActivePen) {
+        return; // Ignorer contact tactile de paume
+      }
+    }
+
     _activePointers++;
 
     // ≥2 doigts → l'InteractiveViewer gère le zoom / pan → annuler le tracé
@@ -485,6 +538,9 @@ class _NotebookScreenState extends State<NotebookScreen> {
   }
 
   void _onPointerMove(PointerMoveEvent event) {
+    if (event.kind == PointerDeviceKind.touch && (_penOnlyMode || _hasActivePen)) {
+      return;
+    }
     if (_activePointers > 1 || _isPanMode) return;
 
     final now   = DateTime.now().millisecondsSinceEpoch.toDouble();
@@ -525,18 +581,24 @@ class _NotebookScreenState extends State<NotebookScreen> {
   }
 
   void _onPointerUp(PointerUpEvent event) {
+    if (event.kind == PointerDeviceKind.stylus || event.kind == PointerDeviceKind.invertedStylus) {
+      _hasActivePen = false;
+    }
     _activePointers = max(0, _activePointers - 1);
     if (_isPanMode) return;
     if (_currentStroke != null) {
       setState(() {
         _strokes.add(_currentStroke!);
         _currentStroke     = null;
-        _hasUnsavedChanges = true;
       });
+      _markDirtyWithDebounce();
     }
   }
 
   void _onPointerCancel(PointerCancelEvent event) {
+    if (event.kind == PointerDeviceKind.stylus || event.kind == PointerDeviceKind.invertedStylus) {
+      _hasActivePen = false;
+    }
     _activePointers = max(0, _activePointers - 1);
     if (_currentStroke != null) setState(() => _currentStroke = null);
   }
@@ -557,7 +619,7 @@ class _NotebookScreenState extends State<NotebookScreen> {
     });
     if (erasedAny) {
       _redoStack.clear();
-      _hasUnsavedChanges = true;
+      _markDirtyWithDebounce();
     }
   }
 
@@ -565,8 +627,8 @@ class _NotebookScreenState extends State<NotebookScreen> {
     if (_strokes.isNotEmpty) {
       setState(() {
         _redoStack.add(_strokes.removeLast());
-        _hasUnsavedChanges = true;
       });
+      _markDirtyWithDebounce();
     }
   }
 
@@ -574,8 +636,8 @@ class _NotebookScreenState extends State<NotebookScreen> {
     if (_redoStack.isNotEmpty) {
       setState(() {
         _strokes.add(_redoStack.removeLast());
-        _hasUnsavedChanges = true;
       });
+      _markDirtyWithDebounce();
     }
   }
 
@@ -1648,28 +1710,16 @@ class _NotebookScreenState extends State<NotebookScreen> {
                       fontSize: 10, color: Color(0xFFA5B4FC), fontWeight: FontWeight.bold),
                 ),
               ),
-              if (_hasUnsavedChanges)
-                const Padding(
-                  padding: EdgeInsets.only(left: 4),
-                  child: Icon(Icons.circle, size: 8, color: Color(0xFFFBBF24)),
-                ),
             ],
           ),
-          Row(
-            children: [
-              const Icon(Icons.sync, size: 10, color: Color(0xFF4ADE80)),
-              const SizedBox(width: 4),
-              Text(
-                _lastSavedTime.isNotEmpty
-                    ? 'Sauvegardé à $_lastSavedTime'
-                    : 'Auto-save toutes les 5 min',
-                style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8)),
-              ),
-            ],
+          const SizedBox(height: 3),
+          SaveStatusChip(
+            status: _saveStatus,
+            lastSavedTime: _lastSavedTime,
           ),
         ],
       ),
-            actions: [
+      actions: [
         // Sélecteur de langue OCR (P2 UX Critique / §6.7)
         PopupMenuButton<String>(
           tooltip: 'Langue de reconnaissance',
@@ -1702,7 +1752,7 @@ class _NotebookScreenState extends State<NotebookScreen> {
           ),
         ),
         const SizedBox(width: 4),
-        // Action principale : Reconnaître l'écriture (§6.2 #5)
+        // Action principale : Reconnaître l'écriture (§6.2 #5 / Partie 4.1)
         ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF4F46E5),
@@ -1713,7 +1763,10 @@ class _NotebookScreenState extends State<NotebookScreen> {
           ),
           onPressed: _recognizeStructuralHTR,
           icon: const Icon(Icons.auto_awesome, size: 16),
-          label: const Text('Reconnaître', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+          label: Text(
+            NotelyTranslations.of(_selectedLanguage).recognize,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+          ),
         ),
         // Menu 'Plus' (⋮) regroupant les actions secondaires (§6.2 #1)
         PopupMenuButton<String>(
@@ -1800,19 +1853,44 @@ class _NotebookScreenState extends State<NotebookScreen> {
                 visualDensity:    VisualDensity.compact,
                 tapTargetSize:    MaterialTapTargetSize.shrinkWrap,
               ),
-              segments: const [
+              segments: [
                 ButtonSegment(value: 'pen',
-                    label: Text('Stylet', style: TextStyle(fontSize: 12)),
-                    icon: Icon(Icons.edit, size: 15)),
+                    label: Text(NotelyTranslations.of(_selectedLanguage).pen, style: const TextStyle(fontSize: 12)),
+                    icon: const Icon(Icons.edit, size: 15)),
                 ButtonSegment(value: 'diagram',
-                    label: Text('Schéma', style: TextStyle(fontSize: 12)),
-                    icon: Icon(Icons.interests, size: 15)),
+                    label: Text(NotelyTranslations.of(_selectedLanguage).diagram, style: const TextStyle(fontSize: 12)),
+                    icon: const Icon(Icons.interests, size: 15)),
                 ButtonSegment(value: 'eraser',
-                    label: Text('Gomme', style: TextStyle(fontSize: 12)),
-                    icon: Icon(Icons.cleaning_services, size: 15)),
+                    label: Text(NotelyTranslations.of(_selectedLanguage).eraser, style: const TextStyle(fontSize: 12)),
+                    icon: const Icon(Icons.cleaning_services, size: 15)),
               ],
               selected: {_activeTool},
               onSelectionChanged: (set) => setState(() => _activeTool = set.first),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Rejet paume / mode stylet seul (Partie 4.4)
+            Tooltip(
+              message: 'Mode stylet seul : ignore les contacts tactiles de la paume et des doigts',
+              child: FilterChip(
+                label: Text(
+                  NotelyTranslations.of(_selectedLanguage).palmRejection,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: _penOnlyMode ? const Color(0xFFFBBF24) : const Color(0xFF94A3B8),
+                    fontWeight: _penOnlyMode ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                selected: _penOnlyMode,
+                onSelected: (val) => setState(() => _penOnlyMode = val),
+                backgroundColor: const Color(0xFF0F172A),
+                selectedColor: const Color(0xFFD97706).withValues(alpha: 0.25),
+                side: BorderSide(
+                  color: _penOnlyMode ? const Color(0xFFF59E0B) : Colors.white24,
+                ),
+                visualDensity: VisualDensity.compact,
+              ),
             ),
 
             const SizedBox(width: 10),
@@ -2109,14 +2187,46 @@ class _NotebookScreenState extends State<NotebookScreen> {
             final z = _transformationController.value.getMaxScaleOnAxis();
             if ((z - _zoomLevel).abs() > 0.005) {
               setState(() => _zoomLevel = z);
+              _triggerZoomBadge();
             }
           },
-          child: Listener(
-            onPointerDown:   _onPointerDown,
-            onPointerMove:   _onPointerMove,
-            onPointerUp:     _onPointerUp,
-            onPointerCancel: _onPointerCancel,
-            child: _buildPageWidget(),
+          child: Stack(
+            children: [
+              Listener(
+                onPointerDown:   _onPointerDown,
+                onPointerMove:   _onPointerMove,
+                onPointerUp:     _onPointerUp,
+                onPointerCancel: _onPointerCancel,
+                child: _buildPageWidget(),
+              ),
+              if (_showZoomBadge)
+                Positioned(
+                  top: 20,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A).withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.white24),
+                        boxShadow: const [
+                          BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4)),
+                        ],
+                      ),
+                      child: Text(
+                        '${(_zoomLevel * 100).round()}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       );

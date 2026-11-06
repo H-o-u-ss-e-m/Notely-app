@@ -5,6 +5,8 @@ import 'package:mobile/main.dart';
 import 'package:mobile/models/structural_model.dart';
 import 'package:mobile/features/notebook/screens/notebook_screen.dart';
 import 'package:mobile/core/network/api_client.dart';
+import 'package:mobile/core/localization/notely_translations.dart';
+import 'package:mobile/features/notebook/widgets/save_status_chip.dart';
 
 void main() {
   testWidgets('Notely smoke test', (WidgetTester tester) async {
@@ -69,5 +71,12 @@ void main() {
     await ApiClient.clearSession();
     expect(ApiClient.authToken, isNull);
     expect(ApiClient.refreshToken, isNull);
+  });
+
+  test('SaveStatusChip and NotelyTranslations fr/en/ar (Mission 6 / Partie 4)', () {
+    expect(NotelyTranslations.of('fr').recognize, 'Reconnaître le texte');
+    expect(NotelyTranslations.of('en').recognize, 'Recognize text');
+    expect(NotelyTranslations.of('ar').recognize, 'التعرف على النص');
+    expect(NotelyTranslations.of('ar').palmRejection, 'رفض راحة اليد');
   });
 }
