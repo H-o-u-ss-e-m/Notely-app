@@ -1,7 +1,19 @@
-MIT License
+Copyright (c) 2026 Houssem Rezgui. All rights reserved.
 
-Copyright (c) 2026 Houssem Rezgui
+PROPRIETARY LICENSE — VIEW-ONLY / EVALUATION ACCESS
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
+This software, including its source code, architecture, visual design, and artificial 
+intelligence models/algorithms, is the exclusive intellectual property of Houssem Rezgui.
 
-The software is provided "as is", without warranty of any kind.
+The source code is made publicly accessible on this repository SOLELY for technical evaluation, 
+educational review, and professional portfolio demonstration purposes.
+
+NO PERMISSION is granted to:
+1. Copy, adapt, modify, reverse engineer, or create derivative works of this software.
+2. Deploy, host as a service (SaaS), execute in production, or distribute this software in any environment.
+3. Sell, sub-license, rent, or commercially exploit any part of this codebase, models, or design.
+
+Any unauthorized use, reproduction, or distribution without prior written consent from the author 
+constitutes a direct violation of copyright laws and will be subject to legal prosecution.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.

@@ -13,7 +13,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](#-licence)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg?style=for-the-badge)](#-licence)
 [![Release](https://img.shields.io/badge/Release-v1.0.0-success?style=for-the-badge)](https://github.com/H-o-u-ss-e-m/Notely-app/releases)
 
 <p align="center">
@@ -589,7 +589,7 @@ Notely respecte la vie privée et les critères de publication du Google Play St
 
 ## 📄 Licence
 
-Ce projet est distribué sous licence libre **MIT**. Consultez le fichier `LICENSE` pour plus de détails.
+Ce projet est distribué sous **Licence Propriétaire (All Rights Reserved — Accès en Consultation / Évaluation uniquement)**. Toute reproduction, modification, déploiement commercial ou exploitation sans autorisation écrite est strictement interdite. Consultez le fichier [`LICENSE`](LICENSE) pour l'intégralité des termes légaux.
 
 ## 👥 Auteur & Remerciements
 
