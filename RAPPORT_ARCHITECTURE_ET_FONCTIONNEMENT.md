@@ -34,7 +34,7 @@ Ce document constitue la référence exhaustive de l'application **Notely (Smart
 
 ### Qu'est-ce que Notely ?
 **Notely** est une plateforme de prise de notes manuscrites augmentée par Intelligence Artificielle. Elle permet à des étudiants, chercheurs et professionnels d'écrire naturellement (au stylet ou au doigt) sur tablette, PC ou mobile, tout en bénéficiant :
-- D'une **reconnaissance d'écriture manuscrite synchrone et asynchrone (HTR - Handwritten Text Recognition)** multilingue (Français, Anglais, Arabe).
+- D'une **reconnaissance d'écriture manuscrite synchrone et asynchrone (HTR - Handwritten Text Recognition)** multilingue (Français, Anglais, Arabe, Allemand).
 - D'une **compréhension structurelle** de la note (distinction automatique entre titres H1-H6, paragraphes de cours et schémas/diagrammes).
 - D'une **capacité d'apprentissage continu local** : l'application apprend des corrections de l'utilisateur sur son style d'écriture sans ré-entraînement lourd.
 - D'outils pédagogiques intégrés : **recherche dans l'encre manuscrite**, **reconnaissance de formes géométriques parfaites**, **outil lasso vectoriel**, **export PDF vectoriel structuré** et **génération automatique de flashcards de révision espacée (SuperMemo SM-2)**.
@@ -268,7 +268,7 @@ Le composant [`front-angular/src/app/components/notebook-editor/`](front-angular
 - [`front-angular/src/app/components/save-status-chip/save-status-chip.component.ts`](front-angular/src/app/components/save-status-chip/save-status-chip.component.ts) : Indicateur d'enregistrement réactif à 4 états visuels (`saved`, `saving`, `dirty`, `error`).
 - [`front-angular/src/app/services/api.service.ts`](front-angular/src/app/services/api.service.ts) : Service d'accès à l'API REST avec injection de Bearer Token.
 - [`front-angular/src/app/interceptors/auth.interceptor.ts`](front-angular/src/app/interceptors/auth.interceptor.ts) : Intercepteur HTTP interceptant les erreurs 401 pour rafraîchir l'access token de façon transparente.
-- [`front-angular/src/app/services/i18n.service.ts`](front-angular/src/app/services/i18n.service.ts) : Système de traduction multilingue réactif (Français, Anglais, Arabe).
+- [`front-angular/src/app/services/i18n.service.ts`](front-angular/src/app/services/i18n.service.ts) : Système de traduction multilingue réactif (Français, Anglais, Arabe, Allemand).
 
 ---
 
@@ -276,8 +276,10 @@ Le composant [`front-angular/src/app/components/notebook-editor/`](front-angular
 
 ### 5.1 Encre Numérique & CustomPainter
 L'application mobile ([`mobile/`](mobile/)) est construite avec Flutter pour garantir 60 à 120 images par seconde sur écran tactile :
-- [`notebook_painter.dart`](mobile/lib/features/notebook/widgets/notebook_painter.dart) : Utilise l'API Canvas Skia/Impeller de Flutter pour dessiner les traits avec lissage par courbes de Bézier quadratiques.
+- [`notebook_painter.dart`](mobile/lib/features/notebook/widgets/notebook_painter.dart) : Utilise l'API Canvas Skia/Impeller de Flutter pour dessiner les traits avec lissage par courbes de Bézier quadratiques, affichage des motifs de page (Ligné, Quadrillé, Pointillés, Blanc) et tracé interactif de la sélection Lasso en pointillés.
+- **Outil Lasso & Sélection Polygonale** : Intègre l'algorithme Ray-Casting pour capturer collectivement les traits manuscrits et offre une barre d'actions rapide flottante pour couper ou supprimer les traits sélectionnés en un geste.
 - **Rejet de Paume (`penOnlyMode`)** : Quand l'utilisateur écrit avec un stylet actif (`PointerDeviceKind.stylus`), les contacts tactiles accidentels des doigts ou de la paume de la main sont ignorés.
+- **Gestion Complète des Espaces & Cours (CRUD)** : [`dashboard_screen.dart`](mobile/lib/features/dashboard/dashboard_screen.dart) intègre les modales d'édition du nom et de la couleur des espaces, ainsi que le renommage et la suppression de cours.
 
 ---
 

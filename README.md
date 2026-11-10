@@ -17,7 +17,7 @@
 [![Release](https://img.shields.io/badge/Release-v1.0.0-success?style=for-the-badge)](https://github.com/H-o-u-ss-e-m/Notely-app/releases)
 
 <p align="center">
-  <b>Notely</b> est une plateforme multiplateforme (Web & Mobile) de prise de notes manuscrites augmentée par Intelligence Artificielle. Elle allie la liberté du papier et de l'encre vectorielle à la puissance d'un moteur de reconnaissance d'écriture manuscrite (HTR) multilingue (Français, Anglais, Arabe), doté d'un système d'apprentissage continu qui retient vos corrections personnelles en temps réel.
+  <b>Notely</b> est une plateforme multiplateforme (Web & Mobile) de prise de notes manuscrites augmentée par Intelligence Artificielle. Elle allie la liberté du papier et de l'encre vectorielle à la puissance d'un moteur de reconnaissance d'écriture manuscrite (HTR) multilingue (Français, Anglais, Arabe, Allemand), doté d'un système d'apprentissage continu qui retient vos corrections personnelles en temps réel.
 </p>
 
 [Comprendre Notely (Grand Public)](#-partie-1--comprendre-notely-en-clair-pour-monsieur-tout-le-monde) • [Architecture & Cœur IA (Ingénieur)](#-partie-2--architecture-ingénierie--cœur-dia-pour-les-experts) • [Installation](#-démarrage-rapide--déploiement) • [Sécurité](#-sécurité-avancée--devsecops) • [Tests](#-qualité-de-code--suite-de-tests)
@@ -77,14 +77,15 @@ C'est un carnet de notes numérique intelligent accessible sur navigateur web (P
 
 ### 1.2 Les Fonctionnalités Phares au Quotidien
 
-* ✍️ **Écriture Manuscrite Haute Fidélité** : Une sensation de glisse naturelle, sans saccade ni temps de latence, avec rendu anti-crénelé et lissage automatique des traits.
-* 🤖 **Reconnaissance Magique de Texte (OCR / HTR)** : Convertit instantanément vos notes manuscrites (Français, Anglais et Arabe) en texte éditable et structuré (titres principaux, paragraphes et schémas).
+* ✍️ **Écriture Manuscrite Haute Fidélité** : Une sensation de glisse naturelle, sans saccade ni temps de latence, avec rendu anti-crénelé et lissage automatique des traits sur Web (Canvas) et Mobile (Skia).
+* 🤖 **Reconnaissance Magique de Texte (OCR / HTR Multilingue)** : Convertit instantanément vos notes manuscrites (**Français, Anglais, Arabe et Allemand**) en texte éditable et structuré (titres principaux H1-H6, paragraphes et schémas).
 * 📐 **Dessin de Formes Géométriques Parfaites** : Tracez un cercle approximatif, un rectangle penché ou un trait tremblotant à main levée : Notely détecte immédiatement votre intention et le transforme en figure géométrique vectorielle parfaite !
 * 🔍 **Recherche dans vos Notes Manuscrites** : Tapez un mot dans la barre de recherche : Notely retrouve immédiatement l'endroit exact où vous l'avez gribouillé sur vos pages et le surligne en couleur, même si vous écrivez de manière brouillonne.
-* ✂️ **Outil Lasso Vectoriel** : Entourez n'importe quel morceau de texte ou dessin avec le lasso pour le déplacer sur la page, le redimensionner ou le supprimer sans affecter le reste de vos notes.
-* 🗂️ **Création Automatique de Cartes Mémoire (Flashcards)** : L'IA identifie automatiquement les définitions et questions clés de vos notes et génère des cartes de révision espacée (technologie SuperMemo SM-2) pour vous aider à mémoriser vos cours sur le long terme.
+* ✂️ **Outil Lasso Universel (Web & Mobile)** : Entourez n'importe quel groupe d'écritures ou dessins avec le lasso pour les effacer ou les couper en un clic via une barre d'actions rapide flottante ou les touches `Suppr` / `Retour arrière`. Parité totale entre Angular et Flutter.
+* 📝 **Fonds de Page & Gabarits Modifiables (Web & Mobile)** : Papier réglé (ligné d'écolier), quadrillé 5mm (petits carreaux), à pointillés (Bullet Journal) ou blanc pur. Changez de modèle instantanément depuis la barre d'outils.
+* 🗂️ **Gestion Intégrale des Espaces & Cours (CRUD Complet)** : Organisez vos études par matières : créez, renommez vos espaces de travail, personnalisez leurs couleurs distinctives et gérez vos cours avec suppression sécurisée sur Web et Mobile.
+* 🧠 **Création Automatique de Cartes Mémoire (Flashcards)** : L'IA identifie automatiquement les définitions et questions clés de vos notes et génère des cartes de révision espacée (technologie SuperMemo SM-2) pour vous aider à mémoriser vos cours sur le long terme.
 * 📄 **Exportation PDF Haute Définition** : Exportez vos carnets en PDF vectoriel impeccable, prêt pour l'impression ou l'envoi par email, respectant la mise en page et les écritures de droite à gauche (Arabe).
-* 📝 **Choix de Pages Personnalisées** : Papier blanc, quadrillé 5mm (petits carreaux), ligné d'écolier ou à points (Bullet Journal).
 
 ---
 
@@ -326,16 +327,28 @@ Le module [`shape-recognizer.ts`](front-angular/src/app/utils/shape-recognizer.t
 * **Protection Anti-Faux-Positifs** : Un ratio de longueur curvimétrique élimine les gribouillis et les lettres manuscrites pour empêcher toute régularisation intempestive.
 
 #### 4. Outil Lasso Vectoriel & Ray-Casting
-Le fichier [`lasso.ts`](front-angular/src/app/utils/lasso.ts) implémente l'algorithme de lancer de rayon (*Ray-Casting Algorithm*) pour déterminer l'appartenance d'un trait au polygone fermé tracé par l'utilisateur, permettant la manipulation collective des tracés.
+Le fichier [`lasso.ts`](front-angular/src/app/utils/lasso.ts) côté Web et [`notebook_screen.dart`](mobile/lib/features/notebook/screens/notebook_screen.dart) côté Mobile implémentent l'algorithme de lancer de rayon (*Ray-Casting Algorithm*) :
+* **Détection d'appartenance polygonale** : chaque point $(x, y)$ du trait est testé contre le contour fermé tracé par l'utilisateur. Si plus de $60\%$ des points se situent à l'intérieur du polygone, le trait est capturé dans la sélection.
+* **Actions groupées instantanées** : suppression en lot, découpage (`Cut`) dans le presse-papier vectoriel, avec retour visuel par contour en pointillés et boutons flottants contextuels sur Mobile ou raccourcis clavier (`Del`, `Backspace`) sur Web.
+
+#### 5. Moteur de Gabarits de Page (Templates)
+Quatre motifs d'arrière-plan vectoriels sont générés dynamiquement :
+* **Ligné** (`lined`) : Espacement régulier pour écriture manuscrite guidée.
+* **Quadrillé** (`grid`) : Grille orthogonale 5mm pour schémas techniques et calculs.
+* **Pointillés** (`dots`) : Matrice de points discrète type Bullet Journal.
+* **Blanc** (`blank`) : Toile vierge pour dessin libre.
 
 ---
 
-### 2.8 Moteur Mobile Flutter : Encre Skia 120 FPS & Rejet de Paume
+### 2.8 Moteur Mobile Flutter : Encre Skia 120 FPS, Lasso & Rejet de Paume
 
-L'application mobile ([`mobile/`](mobile/)) est développée avec Flutter pour garantir une fluidité absolue (60 à 120 images par seconde sur écrans ProMotion) :
+L'application mobile ([`mobile/`](mobile/)) est développée avec Flutter pour garantir une fluidité absolue (60 à 120 images par seconde sur écrans ProMotion) et une parité fonctionnelle stricte avec le Web :
 * **Moteur Graphique Bas Niveau** : Implémentation via `CustomPainter` avec interpolation par courbes de Bézier quadratiques lissant les micro-tremblements du stylet.
+* **Parité d'Outils Complète** : Outil Lasso natif, sélection polygonale, barre d'actions flottante (`Effacer`, `Couper`) et sélection de gabarit de page en temps réel.
 * **Rejet Matériel de la Paume (`Palm Rejection`)** :
   L'application interroge le type de pointeur physique fourni par le système (`PointerDeviceKind`). Dès qu'un stylet actif est détecté (`PointerDeviceKind.stylus`), tous les événements tactiles provenant des doigts ou de la paume (`PointerDeviceKind.touch`) sont instantanément ignorés.
+* **Gestion Intégrale des Espaces & Cours (CRUD)** :
+  Tableau de bord réactif permettant l'édition directe du nom et de la couleur des matières, le renommage des cours et leur suppression avec modales de confirmation protégées.
 
 ---
 

@@ -53,6 +53,32 @@ flutter run -d 23021RAA2Y
 - Basculez sur l'outil **`📐 Schéma`** pour dessiner des graphes, des axes X-Y, des formes ou des figures géométriques.
 - Lors de l'exportation IA, ces éléments sont automatiquement découpés et insérés comme captures graphiques haute fidélité dans le document final.
 
+### D. Outil Lasso Vectoriel (✂️) — *Nouveau (Web & Mobile)*
+- Sélectionnez l'icône **`Lasso`** dans la barre d'outils.
+- Entourez un groupe de mots ou de dessins à main levée : le polygone se referme et met en surbrillance les traits capturés.
+- **Actions rapides** :
+  - Sur **Mobile** : Une barre d'action flottante apparaît en bas avec les boutons **`Effacer`** et **`Couper`**.
+  - Sur **Web** : Cliquez sur l'action dans la barre d'outils ou appuyez simplement sur la touche **`Suppr`** ou **`Retour arrière`** de votre clavier.
+
+### E. Gabarits de Fond de Page — *Nouveau (Web & Mobile)*
+- Cliquez sur le menu déroulant de gabarit dans la barre d'outils :
+  - **Ligné** : Lignes horizontales d'écolier pour guider l'écriture droite.
+  - **Quadrillé** : Grille à carreaux 5mm pour mathématiques et schémas.
+  - **Pointillés** : Trame de points discrets (style Bullet Journal).
+  - **Blanc** : Feuille blanche unie pour dessin et croquis libres.
+
+### F. Sélection de la Langue IA (FR, EN, AR, DE) — *Nouveau*
+- Sélectionnez la langue d'inférence dans le menu déroulant :
+  - 🇫🇷 **Français** (`fr`)
+  - 🇬🇧 **Anglais** (`en`)
+  - 🇸🇦 **Arabe** (`ar`) avec support bidirectionnel (RTL)
+  - 🇩🇪 **Allemand** (`de`) avec support des umlauts et composés
+
+### G. Gestion des Matières et Cours (CRUD Complet) — *Nouveau (Web & Mobile)*
+- **Modifier un Espace / Matière** : Cliquez sur l'icône crayon `✏️` à côté du nom de l'espace pour modifier son titre ou lui attribuer une nouvelle couleur distinctive.
+- **Supprimer un Espace** : Cliquez sur l'icône poubelle `🗑️` pour supprimer l'espace et ses cours associés (avec modale de confirmation).
+- **Renommer ou Supprimer un Cours** : Sur chaque carte de cours, le menu d'options `⋮` permet de renommer le cours ou de le supprimer définitivement.
+
 ---
 
 ## 3. Les Deux Modes d'Exportation PDF
