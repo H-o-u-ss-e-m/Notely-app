@@ -452,7 +452,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           if (_selectedSubjectId != null) ...[
                             IconButton(
                               icon: const Icon(Icons.edit, size: 16, color: Color(0xFF818CF8)),
-                              tooltip: 'Modifier l'espace sélectionné',
+                              tooltip: "Modifier l'espace sélectionné",
                               onPressed: () {
                                 final s = _subjects.firstWhere((item) => item.id == _selectedSubjectId);
                                 _openEditSpaceDialog(s);
@@ -460,7 +460,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)),
-                              tooltip: 'Supprimer l'espace sélectionné',
+                              tooltip: "Supprimer l'espace sélectionné",
                               onPressed: () {
                                 final s = _subjects.firstWhere((item) => item.id == _selectedSubjectId);
                                 _confirmDeleteSpace(s);
@@ -575,8 +575,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             ),
                           ],
                         ),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -651,7 +654,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                           onTap: () => _openCourse(subj, les),
                         ),
-                      );
+                      ),
+                    );
                     }),
                 ],
               ),
@@ -717,7 +721,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: const Color(0xFF1E293B),
-          title: const Text('Modifier l'Espace', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          title: const Text("Modifier l'Espace", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -801,9 +805,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Supprimer l'Espace', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text("Supprimer l'Espace", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: Text(
-          'Voulez-vous vraiment supprimer l'espace "${subject.name}" et tous les cours qu'il contient ? Cette action est irréversible.',
+          'Voulez-vous vraiment supprimer l\'espace "${subject.name}" et tous les cours qu\'il contient ? Cette action est irréversible.',
           style: const TextStyle(color: Color(0xFF94A3B8)),
         ),
         actions: [
