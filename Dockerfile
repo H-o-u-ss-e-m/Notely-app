@@ -1,6 +1,7 @@
 # ==============================================================================
 # Notely backend — image unique pour `api` (gunicorn) et `worker` (celery).
 # Dépendances installées depuis requirements.lock (versions épinglées).
+# Optimisé CPU pour production légère (< 1.5 Go au lieu de > 6.5 Go avec CUDA).
 # ==============================================================================
 FROM python:3.10-slim AS base
 
@@ -23,7 +24,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.lock /app/requirements.lock
-RUN pip install --upgrade pip && pip install -r /app/requirements.lock
+# Installation prioritaire de la version CPU allégée de PyTorch puis des dépendances verrouillées
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r /app/requirements.lock
 
 COPY backend /app/backend
 COPY alembic.ini /app/alembic.ini

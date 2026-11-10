@@ -13,7 +13,8 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Docker](https://img.shields.io/badge/Docker-Compose%20Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](#-licence)
+[![Release](https://img.shields.io/badge/Release-v1.0.0-success?style=for-the-badge)](https://github.com/H-o-u-ss-e-m/Notely-app/releases)
 
 <p align="center">
   <b>Notely</b> est une plateforme multiplateforme (Web & Mobile) de prise de notes manuscrites augmentée par Intelligence Artificielle. Elle allie la liberté du papier et de l'encre vectorielle à la puissance d'un moteur de reconnaissance d'écriture manuscrite (HTR) multilingue (Français, Anglais, Arabe), doté d'un système d'apprentissage continu qui retient vos corrections personnelles en temps réel.
@@ -148,8 +149,8 @@ Le backend Notely applique rigoureusement les préceptes de la **Clean Architect
 ```
 
 #### Principes Fondamentaux Respectés :
-1. **Règle de Dépendance Unidirectionnelle** : Les couches internes ignorent totalement l'existence des couches externes. Le domaine métier ([`backend/app/domain/`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/domain/)) ne dépend ni de FastAPI, ni de SQLAlchemy, ni d'un quelconque framework web.
-2. **Inversion de Dépendances (DIP)** : L'accès aux modèles d'IA, aux caches et à la persistance s'effectue via des contrats et registres d'interfaces ([`backend/app/ml/registry.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/ml/registry.py)).
+1. **Règle de Dépendance Unidirectionnelle** : Les couches internes ignorent totalement l'existence des couches externes. Le domaine métier ([`backend/app/domain/`](backend/app/domain/)) ne dépend ni de FastAPI, ni de SQLAlchemy, ni d'un quelconque framework web.
+2. **Inversion de Dépendances (DIP)** : L'accès aux modèles d'IA, aux caches et à la persistance s'effectue via des contrats et registres d'interfaces ([`backend/app/ml/registry.py`](backend/app/ml/registry.py)).
 3. **Ségrégation des Responsabilités (SRP)** : La segmentation spatiale, l'inférence neuronale, la correction adaptative et la génération de documents sont découplées en services autonomes et testables unitairement en isolation.
 
 ---
@@ -172,13 +173,13 @@ Le pipeline de transcription traverse 5 étapes spécialisées :
                                                                 (TrOCR ViT + BART FP16)
 ```
 
-1. **Segmentation Spatiale & Structuration de Page** ([`backend/app/services/segmentation_service.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/services/segmentation_service.py)) :
+1. **Segmentation Spatiale & Structuration de Page** ([`backend/app/services/segmentation_service.py`](backend/app/services/segmentation_service.py)) :
    - Regroupement des traits par projection horizontale d'histogrammes et clustering DBSCAN/K-means sur l'axe vertical $Y$.
    - Classification sémantique de la structure de document : détection automatique des niveaux de titres ($H1 \dots H6$), paragraphes de texte continu et zones de dessins ou diagrammes (basée sur l'isotropie et la densité des tracés).
-2. **Rendu Matriciel Adaptatif & Normalisation** ([`backend/app/ml/rendering.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/ml/rendering.py)) :
+2. **Rendu Matriciel Adaptatif & Normalisation** ([`backend/app/ml/rendering.py`](backend/app/ml/rendering.py)) :
    - Rasterisation vectorielle vers matricielle à haute résolution avec interpolation par spline et lissage anti-aliasing.
    - Calcul de la pente d'écriture (*deskew*) par régression sur les boîtes englobantes et redressement affine de l'angle d'inclinaison.
-3. **Cache Déterministe SHA-256 L1** ([`backend/app/ml/cache.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/ml/cache.py)) :
+3. **Cache Déterministe SHA-256 L1** ([`backend/app/ml/cache.py`](backend/app/ml/cache.py)) :
    - Les coordonnées normalisées des traits sont hachées en clé cryptographique SHA-256.
    - Si les traits n'ont pas varié, le résultat HTR est servi instantanément avec une latence inférieure à $2 \text{ ms}$ sans solliciter le GPU.
 
@@ -210,8 +211,8 @@ Pour la transcription d'écritures manuscrites occidentales libres et cursives, 
 ```
 
 #### Optimisations d'Inférence Industrielle :
-* **Inférence Demi-Précision FP16** : Détection dynamique de l'accélération matérielle NVIDIA CUDA ([`backend/app/core/device.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/core/device.py)). En mode FP16, l'empreinte VRAM est réduite de $50\%$ et le débit d'inférence est multiplié par $3\times$.
-* **Gestionnaire LRU Dynamique** ([`backend/app/ml/registry.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/ml/registry.py)) : Déchargement propre des poids des modèles inactifs de la mémoire vive pour préserver les ressources serveur en cas d'inactivité prolongée.
+* **Inférence Demi-Précision FP16** : Détection dynamique de l'accélération matérielle NVIDIA CUDA ([`backend/app/core/device.py`](backend/app/core/device.py)). En mode FP16, l'empreinte VRAM est réduite de $50\%$ et le débit d'inférence est multiplié par $3\times$.
+* **Gestionnaire LRU Dynamique** ([`backend/app/ml/registry.py`](backend/app/ml/registry.py)) : Déchargement propre des poids des modèles inactifs de la mémoire vive pour préserver les ressources serveur en cas d'inactivité prolongée.
 
 ---
 
@@ -222,9 +223,9 @@ L'écriture manuscrite arabe pose des défis algorithmiques majeurs :
 2. **Direction de Lecture Inversée (Right-to-Left - RTL)**.
 3. **Signes Diacritiques (Tashkeel) et Élongations Typographiques (Tatweel `ـ`)**.
 
-Notely intègre un moteur dédié ([`backend/app/ml/engines/arabic_engine.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/ml/engines/arabic_engine.py)) et un pipeline typographique de précision :
+Notely intègre un moteur dédié ([`backend/app/ml/engines/arabic_engine.py`](backend/app/ml/engines/arabic_engine.py)) et un pipeline typographique de précision :
 * **Normalisation Unicode & Nettoyage Canonique** : Harmonisation des variantes d'Alef (`أ`, `إ`, `آ` $\to$ `ا`), unification des formes de Yaa (`ى` $\to$ `ي`) et stripping paramétrable des diacritiques.
-* **Moteur Bidirectionnel pour Export PDF** ([`backend/app/services/pdf_generator_service.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/services/pdf_generator_service.py)) :
+* **Moteur Bidirectionnel pour Export PDF** ([`backend/app/services/pdf_generator_service.py`](backend/app/services/pdf_generator_service.py)) :
   L'export vectoriel PDF sous ReportLab applique successivement :
   1. `arabic_reshaper.reshape()` pour lier morphologiquement les glyphes entre eux.
   2. L'algorithme bidi standard Unicode (`bidi.algorithm.get_display()`) pour inverser l'ordre des caractères tout en préservant l'orientation des nombres et des termes latins intégrés.
@@ -261,20 +262,20 @@ Ré-entraîner un modèle Transformer de plusieurs centaines de millions de para
 ```
 
 #### Niveau 1 : La Mémoire Géométrique d'Encre (Ink Hash & Hamming)
-* Implémentation : [`backend/app/domain/line_memory.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/domain/line_memory.py)
+* Implémentation : [`backend/app/domain/line_memory.py`](backend/app/domain/line_memory.py)
 * **Principe Mathématique** : Tout mot manuscrit écrit par un scripteur présente une signature visuelle caractéristique. Le nuage de points est normalisé et projeté sur une grille binaire de $32 \times 8$ bits (soit 256 bits).
 * L'empreinte binaire résultante est comparée aux écritures corrigées antérieures par **Distance de Hamming** :
   $$D_H(h_1, h_2) = \sum_{k=1}^{256} (h_{1}[k] \oplus h_{2}[k])$$
 * Si $D_H \le 12$, le système reconnaît immédiatement la signature motrice de l'auteur et substitue instantanément la correction exacte, avec une complexité temporelle $O(1)$ et une latence inférieure à $1 \text{ ms}$.
 
 #### Niveau 2 : Le Dictionnaire Personnel Contextuel
-* Implémentation : [`backend/app/domain/user_dictionary.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/domain/user_dictionary.py)
+* Implémentation : [`backend/app/domain/user_dictionary.py`](backend/app/domain/user_dictionary.py)
 * Table persistée : `user_dictionary` sous PostgreSQL.
 * Quand un scripteur a une lettre ambiguë récurrente (ex. son "r" ressemble à un "v"), chaque validation incrémente un compteur de poids conditionnel $W(\text{prédit} \to \text{corrigé})$.
 * Lorsque le décodeur HTR hésite avec un score de confiance inférieur au seuil de certitude, la couche de post-traitement interroge le dictionnaire du profil actif et bascule automatiquement sur l'orthographe habituelle de l'utilisateur.
 
 #### Niveau 3 : Le Fine-Tuning Supervisé Différé (Pipeline MLOps)
-* Implémentation : [`backend/app/api/ocr_feedback.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/api/ocr_feedback.py)
+* Implémentation : [`backend/app/api/ocr_feedback.py`](backend/app/api/ocr_feedback.py)
 * Avec le consentement explicite de l'utilisateur (`consent_train = True`), la paire labellisée `(image_matricielle, texte_vérité_terrain)` est historisée dans `ocr_corrections`.
 * Ce jeu de données permet d'entraîner périodiquement des checkpoints spécialisés de TrOCR par descente de gradient avec régularisation LoRA / PEFT.
 
@@ -284,7 +285,7 @@ Ré-entraîner un modèle Transformer de plusieurs centaines de millions de para
 
 Un système d'apprentissage automatique connecté aux retours utilisateurs est vulnérable aux **attaques par empoisonnement de données (Data Poisoning)** : saisies absurdes, spam, ou tentatives de corrompre le dictionnaire avec des substitutions malveillantes.
 
-Le module [`backend/app/domain/anti_poison.py`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/backend/app/domain/anti_poison.py) filtre chaque proposition de correction avant persistance :
+Le module [`backend/app/domain/anti_poison.py`](backend/app/domain/anti_poison.py) filtre chaque proposition de correction avant persistance :
 
 $$CER_{\text{norm}}(S_{\text{prédit}}, S_{\text{corrigé}}) = \frac{\text{Levenshtein}(S_{\text{prédit}}, S_{\text{corrigé}})}{\max(|S_{\text{prédit}}|, |S_{\text{corrigé}}|)}$$
 
@@ -296,7 +297,7 @@ $$CER_{\text{norm}}(S_{\text{prédit}}, S_{\text{corrigé}}) = \frac{\text{Leven
 
 ### 2.7 Responsive Web, Moteur Canvas HTML5 & Viewport Mathématique
 
-L'éditeur web Angular ([`front-angular/src/app/components/notebook-editor/`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/front-angular/src/app/components/notebook-editor/)) intègre un moteur de dessin vectoriel sur Canvas HTML5 conçu pour être réactif sur n'importe quel écran :
+L'éditeur web Angular ([`front-angular/src/app/components/notebook-editor/`](front-angular/src/app/components/notebook-editor/)) intègre un moteur de dessin vectoriel sur Canvas HTML5 conçu pour être réactif sur n'importe quel écran :
 
 #### 1. Gestion du Device Pixel Ratio (DPR)
 Pour éviter le flou de pixelisation inhérent aux écrans haute densité (Apple Retina, écrans 4K/QHD) :
@@ -318,20 +319,20 @@ $$\begin{aligned}
 \end{aligned}$$
 
 #### 3. Reconnaissance Géométrique de Forme Parfaite en Temps Réel
-Le module [`shape-recognizer.ts`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/front-angular/src/app/utils/shape-recognizer.ts) analyse les points tracés à la volée :
+Le module [`shape-recognizer.ts`](front-angular/src/app/utils/shape-recognizer.ts) analyse les points tracés à la volée :
 * **Détection de Segments Droits** : Calcule la distance orthogonale maximale de chaque point à la corde joignant le point de départ et le point d'arrivée.
 * **Détection de Cercles / Ellipses** : Analyse la variance radiale par rapport au centre de gravité géométrique $\sigma_R / \mu_R$.
 * **Détection de Rectangles** : Évalue la corrélation avec la boîte englobante orientée et la présence de 4 sommets à angles orthogonaux.
 * **Protection Anti-Faux-Positifs** : Un ratio de longueur curvimétrique élimine les gribouillis et les lettres manuscrites pour empêcher toute régularisation intempestive.
 
 #### 4. Outil Lasso Vectoriel & Ray-Casting
-Le fichier [`lasso.ts`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/front-angular/src/app/utils/lasso.ts) implémente l'algorithme de lancer de rayon (*Ray-Casting Algorithm*) pour déterminer l'appartenance d'un trait au polygone fermé tracé par l'utilisateur, permettant la manipulation collective des tracés.
+Le fichier [`lasso.ts`](front-angular/src/app/utils/lasso.ts) implémente l'algorithme de lancer de rayon (*Ray-Casting Algorithm*) pour déterminer l'appartenance d'un trait au polygone fermé tracé par l'utilisateur, permettant la manipulation collective des tracés.
 
 ---
 
 ### 2.8 Moteur Mobile Flutter : Encre Skia 120 FPS & Rejet de Paume
 
-L'application mobile ([`mobile/`](file:///c:/Users/rezgu/Desktop/Home/OCR_Manuscrit/mobile/)) est développée avec Flutter pour garantir une fluidité absolue (60 à 120 images par seconde sur écrans ProMotion) :
+L'application mobile ([`mobile/`](mobile/)) est développée avec Flutter pour garantir une fluidité absolue (60 à 120 images par seconde sur écrans ProMotion) :
 * **Moteur Graphique Bas Niveau** : Implémentation via `CustomPainter` avec interpolation par courbes de Bézier quadratiques lissant les micro-tremblements du stylet.
 * **Rejet Matériel de la Paume (`Palm Rejection`)** :
   L'application interroge le type de pointeur physique fourni par le système (`PointerDeviceKind`). Dès qu'un stylet actif est détecté (`PointerDeviceKind.stylus`), tous les événements tactiles provenant des doigts ou de la paume (`PointerDeviceKind.touch`) sont instantanément ignorés.
@@ -545,6 +546,50 @@ flutter analyze
 ```
 
 ---
+
+
+---
+
+## 🌿 Stratégie Git & Cycle de Versionnement
+
+* **Branche principale `main`** : Branche de production protégée, toujours stable.
+* **Branches de travail courtes** :
+  * `feat/<nom>` : Développement de nouvelles fonctionnalités.
+  * `fix/<nom>` : Correction d'anomalies.
+* **Validation CI obligatoire** : Chaque Pull Request doit valider l'ensemble des tests unitaires, l'analyse statique et le build de production avant fusion.
+* **Versionnement SemVer** : `v1.0.0` scelle la première version majeure stable de l'application.
+
+---
+
+## 🌐 Configuration Multi-Environnements de l'API
+
+L'URL du backend n'est jamais figée en dur pour assurer la portabilité :
+* **Web (Angular 19)** :
+  * Développement local : `front-angular/src/environments/environment.ts` (`http://127.0.0.1:8000/api/v1`).
+  * Production / Reverse-Proxy : `front-angular/src/environments/environment.prod.ts` (chemin relatif `/api/v1` via Caddy/Nginx).
+* **Mobile (Flutter)** :
+  * Configuration au build : `flutter run --dart-define=API_URL=https://mon-domaine.com`
+  * Émulateur Android : bascule automatique sur `http://10.0.2.2:8000/api/v1`.
+  * Modification dynamique à chaud via les paramètres de l'application (`EnvConfig.setRuntimeUrl`).
+
+---
+
+## 🛡️ Données Personnelles, RGPD & Suppression de Compte
+
+Notely respecte la vie privée et les critères de publication du Google Play Store :
+* **Minimisation des données** : Les mots de passe sont protégés par hachage Argon2id salé.
+* **Portabilité des données** : Téléchargement complet de ses notes et corrections via `GET /api/v1/me/export`.
+* **Droit à l'effacement immédiat** : L'utilisateur peut supprimer définitivement son compte et l'ensemble de ses données en cascade via l'endpoint :
+  ```http
+  DELETE /api/v1/me
+  ```
+  Cette opération détruit instantanément cours, pages, tracés vectoriels et entrées de dictionnaire associées.
+
+---
+
+## 📄 Licence
+
+Ce projet est distribué sous licence libre **MIT**. Consultez le fichier `LICENSE` pour plus de détails.
 
 ## 👥 Auteur & Remerciements
 

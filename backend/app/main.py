@@ -55,14 +55,21 @@ async def lifespan(app: FastAPI):
         if settings.ENV == "dev":
             Base.metadata.create_all(bind=engine, checkfirst=True)
     else:
-        logger.error("❌ PostgreSQL INDISPONIBLE — L'application ne peut pas démarrer sans base de données.")
-        raise RuntimeError("PostgreSQL inaccessible. Vérifiez la variable DATABASE_URL et que PostgreSQL est démarré.")
+        if settings.ENV in ("test", "ci"):
+            logger.warning("⚠️ PostgreSQL non accessible en environnement de test : poursuite en mode isolé.")
+        else:
+            logger.error("❌ PostgreSQL INDISPONIBLE — L'application ne peut pas démarrer sans base de données.")
+            raise RuntimeError("PostgreSQL inaccessible. Vérifiez la variable DATABASE_URL et que PostgreSQL est démarré.")
 
-    # Chargement du moteur TrOCR
-    try:
-        trocr_engine.load_model()
-    except Exception as e:
-        logger.warning(f"Préchargement TrOCR différé : {e}")
+    # Chargement du moteur TrOCR (désactivable via SKIP_MODEL_LOAD ou en tests unitaires)
+    skip_model = os.getenv("SKIP_MODEL_LOAD", "0").lower() in ("1", "true", "yes")
+    if settings.ENV not in ("test", "ci") and not skip_model:
+        try:
+            trocr_engine.load_model()
+        except Exception as e:
+            logger.warning(f"Préchargement TrOCR différé : {e}")
+    else:
+        logger.info("ℹ️ Préchargement TrOCR ignoré (environnement de test / SKIP_MODEL_LOAD actif).")
 
     yield
     logger.info("Arrêt du backend FastAPI.")
