@@ -96,6 +96,9 @@ class HtrCache:
         self._redis_checked = False
 
     def _get_redis(self):
+        import os
+        if os.getenv("ENV") in ("test", "ci"):
+            return None
         if not self._redis_checked:
             self._redis_checked = True
             try:

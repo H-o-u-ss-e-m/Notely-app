@@ -80,17 +80,21 @@ class Settings:
     API_V1_STR: str = "/api/v1"
 
     ENV: str = os.getenv("ENV", "dev").lower()
-    if ENV not in ("dev", "staging", "prod"):
-        raise ConfigError("ENV doit valoir dev, staging ou prod.")
+    if ENV not in ("dev", "staging", "prod", "test", "ci"):
+        raise ConfigError("ENV doit valoir dev, staging, prod, test ou ci.")
 
     HOST: str = os.getenv("HOST", "0.0.0.0")
     PORT: int = int(os.getenv("PORT", "8000"))
     DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
 
-    # Base de données PostgreSQL — AUCUNE valeur par défaut
-    DATABASE_URL: str = _require_env(
-        "DATABASE_URL",
-        "Exemple : postgresql+psycopg2://user:password@localhost:5432/notely",
+    # Base de données PostgreSQL — repli SQLite mémoire pour mode test/ci
+    DATABASE_URL: str = (
+        os.getenv("DATABASE_URL", "sqlite:///:memory:")
+        if ENV in ("test", "ci")
+        else _require_env(
+            "DATABASE_URL",
+            "Exemple : postgresql+psycopg2://user:password@localhost:5432/notely",
+        )
     )
 
     # JWT — AUCUNE valeur par défaut

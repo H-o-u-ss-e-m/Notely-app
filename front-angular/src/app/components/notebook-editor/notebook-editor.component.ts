@@ -127,7 +127,7 @@ export class NotebookEditorComponent implements OnInit, AfterViewInit, OnDestroy
 
   // Navigation onglets OCR (§6.4)
   ocrTab: 'text' | 'words' | 'structure' = 'text';
-  selectedLanguage: 'fr' | 'en' | 'ar' = 'fr';
+  selectedLanguage: 'fr' | 'en' | 'ar' | 'de' = 'fr';
   localCorrections: Record<string, string> = {};
 
   // Modal correction mot à mot (§6.4)
@@ -417,6 +417,39 @@ export class NotebookEditorComponent implements OnInit, AfterViewInit, OnDestroy
   @HostListener('window:resize')
   onResize() {
     this.resizeCanvas();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent) {
+    if ((e.key === 'Delete' || e.key === 'Backspace') && this.selectedLassoStrokes.length > 0) {
+      const activeTag = (document.activeElement?.tagName || '').toLowerCase();
+      if (activeTag !== 'input' && activeTag !== 'textarea') {
+        e.preventDefault();
+        this.deleteSelectedLassoStrokes();
+      }
+    }
+  }
+
+  deleteSelectedLassoStrokes(): void {
+    if (!this.selectedLassoStrokes.length) return;
+    const ids = new Set(this.selectedLassoStrokes.map(s => s.id));
+    this.currentPage.strokes = this.currentPage.strokes.filter(s => !ids.has(s.id));
+    this.selectedLassoStrokes = [];
+    this.lassoPoints = [];
+    this.triggerDirty();
+    this.redraw();
+    this.toastService.info('Lasso', 'Traits sélectionnés effacés.');
+  }
+
+  cutSelectedLassoStrokes(): void {
+    if (!this.selectedLassoStrokes.length) return;
+    this.deleteSelectedLassoStrokes();
+  }
+
+  clearLassoSelection(): void {
+    this.selectedLassoStrokes = [];
+    this.lassoPoints = [];
+    this.redraw();
   }
 
   // --- CONVERSION ÉCRAN ↔ PAGE (Source de vérité unique — Plan v2 §3.2) ---

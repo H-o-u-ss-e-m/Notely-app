@@ -66,6 +66,10 @@ class _NotebookScreenState extends State<NotebookScreen> {
   StructuralHTRResponseModel? _structuralResult;
   bool _isLoading = false;
   bool _showGrid  = true;
+  String _pageTemplate = 'lined'; // 'lined' | 'grid' | 'dots' | 'blank'
+  List<Offset> _lassoPoints = [];
+  List<StrokeModel> _selectedLassoStrokes = [];
+  List<StrokeModel> _clipboardStrokes = [];
   // Langue sélectionnée pour la reconnaissance (P2 UX Critique)
   String _selectedLanguage = 'fr';
 
@@ -518,6 +522,14 @@ class _NotebookScreenState extends State<NotebookScreen> {
       return;
     }
 
+    if (_activeTool == 'lasso') {
+      setState(() {
+        _selectedLassoStrokes = [];
+        _lassoPoints = [Offset(point.x, point.y)];
+      });
+      return;
+    }
+
     setState(() {
       _redoStack.clear();
       _currentStroke = StrokeModel(
@@ -556,6 +568,14 @@ class _NotebookScreenState extends State<NotebookScreen> {
       return;
     }
 
+    if (_activeTool == 'lasso') {
+      setState(() {
+        _selectedLassoStrokes = [];
+        _lassoPoints = [Offset(point.x, point.y)];
+      });
+      return;
+    }
+
     if (_currentStroke == null) return;
 
     final old = _currentStroke!.bbox;
@@ -586,6 +606,22 @@ class _NotebookScreenState extends State<NotebookScreen> {
     }
     _activePointers = max(0, _activePointers - 1);
     if (_isPanMode) return;
+
+    if (_activeTool == 'lasso') {
+      if (_lassoPoints.length > 2) {
+        final selected = _findStrokesInLasso(_strokes, _lassoPoints);
+        setState(() {
+          _selectedLassoStrokes = selected;
+          _lassoPoints = [];
+        });
+      } else {
+        setState(() {
+          _lassoPoints = [];
+        });
+      }
+      return;
+    }
+
     if (_currentStroke != null) {
       setState(() {
         _strokes.add(_currentStroke!);
@@ -1658,11 +1694,24 @@ class _NotebookScreenState extends State<NotebookScreen> {
       body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator(color: Color(0xFF818CF8)))
-            : Column(
+            : Stack(
                 children: [
-                  _buildToolbar(),
-                  _buildZoomBar(),
-                  Expanded(child: _buildCanvas()),
+                  Column(
+                    children: [
+                      _buildToolbar(),
+                      _buildZoomBar(),
+                      Expanded(child: _buildCanvas()),
+                    ],
+                  ),
+                  if (_selectedLassoStrokes.isNotEmpty)
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      right: 16,
+                      child: Center(
+                        child: _buildLassoActionWidget(),
+                      ),
+                    ),
                 ],
               ),
       ),
@@ -1720,6 +1769,76 @@ class _NotebookScreenState extends State<NotebookScreen> {
         ],
       ),
       actions: [
+        // Sélecteur de motif de page (Ligné, Quadrillé, Pointillés, Blanc)
+        PopupMenuButton<String>(
+          tooltip: 'Fond de page',
+          initialValue: _pageTemplate,
+          onSelected: (tpl) => setState(() => _pageTemplate = tpl),
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              value: 'lined',
+              child: Row(children: [
+                Icon(Icons.horizontal_rule, size: 18, color: Color(0xFF818CF8)),
+                SizedBox(width: 8),
+                Text('Ligné'),
+              ]),
+            ),
+            PopupMenuItem(
+              value: 'grid',
+              child: Row(children: [
+                Icon(Icons.grid_on, size: 18, color: Color(0xFF818CF8)),
+                SizedBox(width: 8),
+                Text('Quadrillé'),
+              ]),
+            ),
+            PopupMenuItem(
+              value: 'dots',
+              child: Row(children: [
+                Icon(Icons.grain, size: 18, color: Color(0xFF818CF8)),
+                SizedBox(width: 8),
+                Text('Pointillés'),
+              ]),
+            ),
+            PopupMenuItem(
+              value: 'blank',
+              child: Row(children: [
+                Icon(Icons.description_outlined, size: 18, color: Colors.grey),
+                SizedBox(width: 8),
+                Text('Blanc'),
+              ]),
+            ),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF334155),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFF6366F1)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _pageTemplate == 'lined' ? Icons.horizontal_rule :
+                  _pageTemplate == 'grid' ? Icons.grid_on :
+                  _pageTemplate == 'dots' ? Icons.grain : Icons.description_outlined,
+                  size: 16,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _pageTemplate == 'lined' ? 'Ligné' :
+                  _pageTemplate == 'grid' ? 'Quadrillé' :
+                  _pageTemplate == 'dots' ? 'Pointillés' : 'Blanc',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const Icon(Icons.arrow_drop_down, size: 16, color: Colors.white70),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
         // Sélecteur de langue OCR (P2 UX Critique / §6.7)
         PopupMenuButton<String>(
           tooltip: 'Langue de reconnaissance',
@@ -1863,6 +1982,9 @@ class _NotebookScreenState extends State<NotebookScreen> {
                 ButtonSegment(value: 'eraser',
                     label: Text(NotelyTranslations.of(_selectedLanguage).eraser, style: const TextStyle(fontSize: 12)),
                     icon: const Icon(Icons.cleaning_services, size: 15)),
+                ButtonSegment(value: 'lasso',
+                    label: Text(NotelyTranslations.of(_selectedLanguage).lasso, style: const TextStyle(fontSize: 12)),
+                    icon: const Icon(Icons.gesture, size: 15)),
               ],
               selected: {_activeTool},
               onSelectionChanged: (set) => setState(() => _activeTool = set.first),
@@ -1898,7 +2020,7 @@ class _NotebookScreenState extends State<NotebookScreen> {
             const SizedBox(width: 10),
 
             // Couleurs
-            if (_activeTool != 'eraser') ...[
+            if (_activeTool != 'eraser' && _activeTool != 'lasso') ...[
               Row(
                 children: _palette.map((item) {
                   final isSel = _activeColor == item['color'];
@@ -2253,13 +2375,125 @@ class _NotebookScreenState extends State<NotebookScreen> {
       child: ClipRect(
         child: CustomPaint(
           painter: NotebookPainter(
-            strokes:       _strokes,
-            currentStroke: _currentStroke,
-            showGrid:      _showGrid,
+            strokes:              _strokes,
+            currentStroke:        _currentStroke,
+            showGrid:             _showGrid,
+            pageTemplate:         _pageTemplate,
+            lassoPoints:          _lassoPoints,
+            selectedLassoStrokes: _selectedLassoStrokes,
           ),
           size: const Size(kPageWidth, kPageHeight),
         ),
       ),
     );
   }
+
+  // ── Méthodes Outil Lasso (§6.4) ──────────────────────────────────────────
+
+  bool _pointInPolygon(Offset p, List<Offset> poly) {
+    bool inside = false;
+    for (int i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      final xi = poly[i].dx, yi = poly[i].dy;
+      final xj = poly[j].dx, yj = poly[j].dy;
+      final intersect = ((yi > p.dy) != (yj > p.dy)) &&
+          (p.dx < (xj - xi) * (p.dy - yi) / (yj - yi) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  List<StrokeModel> _findStrokesInLasso(List<StrokeModel> strokes, List<Offset> poly) {
+    if (poly.length < 3) return [];
+    final selected = <StrokeModel>[];
+    for (final s in strokes) {
+      if (s.points.isEmpty) continue;
+      int insideCount = 0;
+      for (final pt in s.points) {
+        if (_pointInPolygon(Offset(pt.x, pt.y), poly)) {
+          insideCount++;
+        }
+      }
+      if (insideCount / s.points.length >= 0.6) {
+        selected.add(s);
+      }
+    }
+    return selected;
+  }
+
+  void _deleteSelectedLassoStrokes() {
+    if (_selectedLassoStrokes.isEmpty) return;
+    final idsToRemove = _selectedLassoStrokes.map((s) => s.id).toSet();
+    setState(() {
+      _redoStack.clear();
+      _strokes.removeWhere((s) => idsToRemove.contains(s.id));
+      _selectedLassoStrokes.clear();
+      _lassoPoints = [];
+    });
+    _markDirtyWithDebounce();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Traits sélectionnés supprimés.'), duration: Duration(seconds: 1)),
+    );
+  }
+
+  void _cutSelectedLassoStrokes() {
+    if (_selectedLassoStrokes.isEmpty) return;
+    _clipboardStrokes = List.from(_selectedLassoStrokes);
+    _deleteSelectedLassoStrokes();
+  }
+
+  Widget _buildLassoActionWidget() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF6366F1), width: 1.5),
+        boxShadow: const [
+          BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4)),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.gesture, size: 18, color: Color(0xFF818CF8)),
+          const SizedBox(width: 8),
+          Text(
+            '${_selectedLassoStrokes.length} sélectionné(s)',
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+          const SizedBox(width: 12),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              visualDensity: VisualDensity.compact,
+            ),
+            icon: const Icon(Icons.delete_outline, size: 15),
+            label: const Text('Effacer', style: TextStyle(fontSize: 12)),
+            onPressed: _deleteSelectedLassoStrokes,
+          ),
+          const SizedBox(width: 6),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4F46E5),
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              visualDensity: VisualDensity.compact,
+            ),
+            icon: const Icon(Icons.content_cut, size: 15),
+            label: const Text('Couper', style: TextStyle(fontSize: 12)),
+            onPressed: _cutSelectedLassoStrokes,
+          ),
+          const SizedBox(width: 6),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18, color: Colors.white70),
+            tooltip: 'Désélectionner',
+            onPressed: () => setState(() => _selectedLassoStrokes.clear()),
+          ),
+        ],
+      ),
+    );
+  }
+
 }

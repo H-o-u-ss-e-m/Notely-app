@@ -7,12 +7,18 @@ class NotebookPainter extends CustomPainter {
   final StrokeModel? currentStroke;
   final List<LineRecognitionModel>? debugLines;
   final bool showGrid;
+  final String pageTemplate; // 'lined' | 'grid' | 'dots' | 'blank'
+  final List<Offset>? lassoPoints;
+  final List<StrokeModel>? selectedLassoStrokes;
 
   NotebookPainter({
     required this.strokes,
     this.currentStroke,
     this.debugLines,
     this.showGrid = true,
+    this.pageTemplate = 'lined',
+    this.lassoPoints,
+    this.selectedLassoStrokes,
   });
 
   @override
@@ -21,21 +27,9 @@ class NotebookPainter extends CustomPainter {
     final bgPaint = Paint()..color = const Color(0xFFFDFBF7);
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
 
-    // 2. Lignes de cahier + marge rouge classique
+    // 2. Fond de page : Lignes / Quadrillage / Pointillés / Blanc (§6.4)
     if (showGrid) {
-      final linePaint = Paint()
-        ..color = const Color(0xFFE5E7EB)
-        ..strokeWidth = 1.0;
-
-      for (double y = 40; y < size.height; y += 32) {
-        canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
-      }
-
-      // Marge verticale rouge à gauche
-      final marginPaint = Paint()
-        ..color = const Color(0xFFFCA5A5)
-        ..strokeWidth = 1.5;
-      canvas.drawLine(const Offset(40, 0), Offset(40, size.height), marginPaint);
+      _drawPageTemplate(canvas, size);
     }
 
     // 3. Dessiner les strokes complétés
@@ -48,7 +42,17 @@ class NotebookPainter extends CustomPainter {
       _drawSmoothStroke(canvas, currentStroke!);
     }
 
-    // 5. Overlay de segmentation debug (Bounding Boxes)
+    // 5. Tracé du lasso en cours (§6.4)
+    if (lassoPoints != null && lassoPoints!.length > 1) {
+      _drawLasso(canvas);
+    }
+
+    // 6. Encadrement des traits sélectionnés au lasso (§6.4)
+    if (selectedLassoStrokes != null && selectedLassoStrokes!.isNotEmpty) {
+      _drawSelectedLassoBox(canvas);
+    }
+
+    // 7. Overlay de segmentation debug (Bounding Boxes)
     if (debugLines != null && debugLines!.isNotEmpty) {
       final colors = [
         Colors.red,
@@ -72,6 +76,89 @@ class NotebookPainter extends CustomPainter {
         canvas.drawRect(rect, rectPaint);
       }
     }
+  }
+
+  void _drawPageTemplate(Canvas canvas, Size size) {
+    if (pageTemplate == 'blank') return;
+
+    const double step = 32.0;
+    final linePaint = Paint()
+      ..color = const Color(0xFFE5E7EB)
+      ..strokeWidth = 0.8;
+
+    if (pageTemplate == 'lined' || pageTemplate == 'grid') {
+      for (double y = 40; y < size.height; y += step) {
+        canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+      }
+
+      // Marge verticale rouge à gauche
+      final marginPaint = Paint()
+        ..color = const Color(0xFFFCA5A5)
+        ..strokeWidth = 1.2;
+      canvas.drawLine(const Offset(40, 0), Offset(40, size.height), marginPaint);
+    }
+
+    if (pageTemplate == 'grid') {
+      for (double x = 40 + step; x < size.width; x += step) {
+        canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
+      }
+    }
+
+    if (pageTemplate == 'dots') {
+      final dotPaint = Paint()
+        ..color = const Color(0xFFCBD5E1)
+        ..style = PaintingStyle.fill;
+      for (double y = 40; y < size.height; y += step) {
+        for (double x = 40; x < size.width; x += step) {
+          canvas.drawCircle(Offset(x, y), 1.2, dotPaint);
+        }
+      }
+    }
+  }
+
+  void _drawLasso(Canvas canvas) {
+    final lassoPaint = Paint()
+      ..color = const Color(0xFF6366F1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final path = Path()..moveTo(lassoPoints![0].dx, lassoPoints![0].dy);
+    for (int i = 1; i < lassoPoints!.length; i++) {
+      path.lineTo(lassoPoints![i].dx, lassoPoints![i].dy);
+    }
+
+    canvas.drawPath(path, lassoPaint);
+  }
+
+  void _drawSelectedLassoBox(Canvas canvas) {
+    double minX = double.infinity, minY = double.infinity;
+    double maxX = double.negativeInfinity, maxY = double.negativeInfinity;
+
+    for (final s in selectedLassoStrokes!) {
+      for (final p in s.points) {
+        if (p.x < minX) minX = p.x;
+        if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x;
+        if (p.y > maxY) maxY = p.y;
+      }
+    }
+
+    if (minX == double.infinity) return;
+
+    final rect = Rect.fromLTRB(minX - 6, minY - 6, maxX + 6, maxY + 6);
+
+    // Fond teinté
+    final bgSelPaint = Paint()
+      ..color = const Color(0xFF4F46E5).withValues(alpha: 0.12)
+      ..style = PaintingStyle.fill;
+    canvas.drawRect(rect, bgSelPaint);
+
+    // Bordure violette
+    final borderPaint = Paint()
+      ..color = const Color(0xFF6366F1)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawRect(rect, borderPaint);
   }
 
   void _drawSmoothStroke(Canvas canvas, StrokeModel stroke) {

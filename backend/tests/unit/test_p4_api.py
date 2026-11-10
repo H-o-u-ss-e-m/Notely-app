@@ -16,7 +16,9 @@ from app.db.models.user_dictionary import UserDictionary
 from app.db.models.ocr_correction import OcrCorrection
 from app.db.models.ocr_job import OcrJob
 
+from app.core.ratelimit import limiter
 app = FastAPI()
+app.state.limiter = limiter
 app.include_router(feedback_router, prefix="/api/v1")
 app.include_router(me_router, prefix="/api/v1")
 app.include_router(jobs_router, prefix="/api/v1")

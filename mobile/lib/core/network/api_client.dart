@@ -387,6 +387,57 @@ class ApiClient {
     }
   }
 
+  
+  static Future<bool> updateSubject(String subjectId, String name, String color) async {
+    try {
+      final url = Uri.parse('${EnvConfig.baseUrl}/courses/subjects/$subjectId');
+      final response = await http.put(url, headers: _getHeaders(),
+          body: jsonEncode({'name': name, 'color': color}))
+          .timeout(const Duration(seconds: 8));
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Erreur updateSubject: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> deleteSubject(String subjectId) async {
+    try {
+      final url = Uri.parse('${EnvConfig.baseUrl}/courses/subjects/$subjectId');
+      final response = await http.delete(url, headers: _getHeaders())
+          .timeout(const Duration(seconds: 8));
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint('Erreur deleteSubject: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> deleteLesson(String subjectId, String lessonId) async {
+    try {
+      final url = Uri.parse('${EnvConfig.baseUrl}/courses/subjects/$subjectId/lessons/$lessonId');
+      final response = await http.delete(url, headers: _getHeaders())
+          .timeout(const Duration(seconds: 8));
+      return response.statusCode == 200 || response.statusCode == 204;
+    } catch (e) {
+      debugPrint('Erreur deleteLesson: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> renameLesson(String subjectId, String lessonId, String newTitle) async {
+    try {
+      final url = Uri.parse('${EnvConfig.baseUrl}/courses/subjects/$subjectId/lessons/$lessonId');
+      final response = await http.put(url, headers: _getHeaders(),
+          body: jsonEncode({'title': newTitle}))
+          .timeout(const Duration(seconds: 8));
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Erreur renameLesson: $e');
+      return false;
+    }
+  }
+
   static Future<List<SubjectModel>> fetchSubjects() async {
     try {
       final url = Uri.parse('${EnvConfig.baseUrl}/courses/subjects');

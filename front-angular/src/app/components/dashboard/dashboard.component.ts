@@ -16,11 +16,21 @@ import { Subject, Lesson } from '../../models/models';
 export class DashboardComponent implements OnInit {
   showNewSpaceModal: boolean = false;
   showNewCourseModal: boolean = false;
+  showEditSpaceModal: boolean = false;
+  showEditCourseModal: boolean = false;
 
   newSpaceName: string = '';
   newSpaceColor: string = '#1E40AF';
   newCourseTitle: string = '';
   newCourseSubjectId: string = '';
+
+  editSpaceId: string = '';
+  editSpaceName: string = '';
+  editSpaceColor: string = '#1E40AF';
+
+  editCourseSubjectId: string = '';
+  editCourseLessonId: string = '';
+  editCourseTitle: string = '';
 
   colors = ['#1E40AF', '#DC2626', '#15803D', '#7C3AED', '#D97706', '#0D9488'];
 
@@ -91,6 +101,48 @@ export class DashboardComponent implements OnInit {
         this.toastService.info('Espace créé (local)', `Espace "${fallback.name}" créé.`);
       }
     });
+  }
+
+  openEditSpaceDialog(subject: Subject, e?: Event) {
+    if (e) e.stopPropagation();
+    this.editSpaceId = subject.id;
+    this.editSpaceName = subject.name;
+    this.editSpaceColor = subject.color;
+    this.showEditSpaceModal = true;
+  }
+
+  updateSpace() {
+    if (!this.editSpaceName.trim() || !this.editSpaceId) return;
+    this.stateService.updateSubject(this.editSpaceId, this.editSpaceName.trim(), this.editSpaceColor);
+    this.showEditSpaceModal = false;
+  }
+
+  deleteSpace(subject: Subject, e?: Event) {
+    if (e) e.stopPropagation();
+    if (confirm(`Voulez-vous vraiment supprimer l'espace "${subject.name}" et tous ses cours ?`)) {
+      this.stateService.deleteSubject(subject.id, subject.name);
+    }
+  }
+
+  openEditCourseDialog(subject: Subject, lesson: Lesson, e?: Event) {
+    if (e) e.stopPropagation();
+    this.editCourseSubjectId = subject.id;
+    this.editCourseLessonId = lesson.id;
+    this.editCourseTitle = lesson.title;
+    this.showEditCourseModal = true;
+  }
+
+  updateCourse() {
+    if (!this.editCourseTitle.trim() || !this.editCourseSubjectId || !this.editCourseLessonId) return;
+    this.stateService.renameLesson(this.editCourseSubjectId, this.editCourseLessonId, this.editCourseTitle.trim());
+    this.showEditCourseModal = false;
+  }
+
+  deleteCourse(subject: Subject, lesson: Lesson, e?: Event) {
+    if (e) e.stopPropagation();
+    if (confirm(`Voulez-vous vraiment supprimer le cours "${lesson.title}" ?`)) {
+      this.stateService.deleteLesson(subject.id, lesson.id, lesson.title);
+    }
   }
 
   createCourse() {

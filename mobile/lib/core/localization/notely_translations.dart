@@ -10,6 +10,7 @@ class NotelyTranslations {
   final String pen;
   final String diagram;
   final String eraser;
+  final String lasso;
   final String palmRejection;
   final String undo;
   final String redo;
@@ -29,6 +30,7 @@ class NotelyTranslations {
     required this.pen,
     required this.diagram,
     required this.eraser,
+    required this.lasso,
     required this.palmRejection,
     required this.undo,
     required this.redo,
@@ -49,6 +51,7 @@ class NotelyTranslations {
     pen: 'Stylet',
     diagram: 'Schéma',
     eraser: 'Gomme',
+    lasso: 'Lasso',
     palmRejection: 'Rejet paume',
     undo: 'Annuler (Ctrl+Z)',
     redo: 'Rétablir (Ctrl+Y)',
@@ -69,6 +72,7 @@ class NotelyTranslations {
     pen: 'Pen',
     diagram: 'Diagram',
     eraser: 'Eraser',
+    lasso: 'Lasso',
     palmRejection: 'Palm rejection',
     undo: 'Undo (Ctrl+Z)',
     redo: 'Redo (Ctrl+Y)',
@@ -89,6 +93,7 @@ class NotelyTranslations {
     pen: 'قلم',
     diagram: 'مخطط',
     eraser: 'ممحاة',
+    lasso: 'حبل التحديد',
     palmRejection: 'رفض راحة اليد',
     undo: 'تراجع (Ctrl+Z)',
     redo: 'إعادة (Ctrl+Y)',
@@ -97,8 +102,31 @@ class NotelyTranslations {
     deletePage: 'حذف الصفحة',
   );
 
+  static const NotelyTranslations de = NotelyTranslations(
+    save: 'Speichern',
+    saveTooltip: 'Änderungen auf dem Server speichern (Strg+S)',
+    recognize: 'Text erkennen',
+    recognizeTooltip: 'Handschrifterkennung (HTR) auf Strichen ausführen',
+    exportPdf: 'PDF exportieren',
+    exportPdfTooltip: 'Aktuelle Lektion als PDF exportieren',
+    aiSummary: 'KI-Zusammenfassung & Karten',
+    aiSummaryTooltip: 'Notizen strukturieren und Lernkarten erstellen',
+    pen: 'Stift',
+    diagram: 'Diagramm',
+    eraser: 'Radierer',
+    lasso: 'Lasso',
+    palmRejection: 'Handballenabweisung',
+    undo: 'Rückgängig (Strg+Z)',
+    redo: 'Wiederholen (Strg+Y)',
+    clearPage: 'Seite leeren',
+    addPage: '+Seite',
+    deletePage: 'Diese Seite löschen',
+  );
+
   static NotelyTranslations of(String lang) {
     switch (lang.toLowerCase()) {
+      case 'de':
+        return de;
       case 'ar':
         return ar;
       case 'en':

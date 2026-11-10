@@ -64,14 +64,18 @@
       </button>
 
       @for (s of (stateService.subjects$ | async); track s.id) {
-        <button 
-          class="space-chip" 
-          [class.active]="(stateService.activeSubjectFilter$ | async) === s.id"
-          [style.--chip-color]="s.color"
-          (click)="stateService.setFilter(s.id)">
-          <span class="chip-color-dot" [style.background]="s.color"></span>
-          {{ s.name }} ({{ s.lessons.length }})
-        </button>
+        <div class="space-chip-group">
+          <button 
+            class="space-chip" 
+            [class.active]="(stateService.activeSubjectFilter$ | async) === s.id"
+            [style.--chip-color]="s.color"
+            (click)="stateService.setFilter(s.id)">
+            <span class="chip-color-dot" [style.background]="s.color"></span>
+            {{ s.name }} ({{ s.lessons.length }})
+          </button>
+          <button class="chip-action-btn" title="Modifier l'espace" (click)="openEditSpaceDialog(s, $event)">✏️</button>
+          <button class="chip-action-btn chip-danger" title="Supprimer l'espace" (click)="deleteSpace(s, $event)">🗑️</button>
+        </div>
       }
     </div>
   </div>
@@ -94,7 +98,11 @@
                 <span class="dot" [style.background]="item.subject.color"></span>
                 {{ item.subject.name }}
               </span>
-              <span class="date-badge">{{ item.lesson.updatedAt }}</span>
+              <div class="card-actions">
+                <span class="date-badge">{{ item.lesson.updatedAt }}</span>
+                <button class="card-btn" title="Renommer le cours" (click)="openEditCourseDialog(item.subject, item.lesson, $event)">✏️</button>
+                <button class="card-btn card-danger" title="Supprimer le cours" (click)="deleteCourse(item.subject, item.lesson, $event)">🗑️</button>
+              </div>
             </div>
 
             <h3 class="course-title">{{ item.lesson.title }}</h3>
@@ -149,6 +157,40 @@
     </div>
   }
 
+  <!-- Modal Modifier Espace -->
+  @if (showEditSpaceModal) {
+    <div class="modal-backdrop" (click)="showEditSpaceModal = false">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>Modifier l'Espace de Travail</h3>
+        <p class="modal-desc">Renommez la matière ou changez sa couleur distinctive.</p>
+
+        <div class="form-group">
+          <label>Nom de l'espace</label>
+          <input type="text" [(ngModel)]="editSpaceName" placeholder="Ex: Mathématiques" autofocus />
+        </div>
+
+        <div class="form-group">
+          <label>Couleur distinctive</label>
+          <div class="color-picker-row">
+            @for (col of colors; track col) {
+              <div 
+                class="color-circle" 
+                [style.background]="col" 
+                [class.selected]="editSpaceColor === col"
+                (click)="editSpaceColor = col">
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="showEditSpaceModal = false">Annuler</button>
+          <button class="btn-confirm" (click)="updateSpace()">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- Modal Nouveau Cours -->
   @if (showNewCourseModal) {
     <div class="modal-backdrop" (click)="showNewCourseModal = false">
@@ -173,6 +215,26 @@
         <div class="modal-actions">
           <button class="btn-cancel" (click)="showNewCourseModal = false">Annuler</button>
           <button class="btn-confirm" (click)="createCourse()">Commencer à écrire</button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Modal Modifier Cours -->
+  @if (showEditCourseModal) {
+    <div class="modal-backdrop" (click)="showEditCourseModal = false">
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <h3>Renommer le Cours</h3>
+        <p class="modal-desc">Modifiez le titre de votre cours manuscrit.</p>
+
+        <div class="form-group">
+          <label>Titre du cours</label>
+          <input type="text" [(ngModel)]="editCourseTitle" placeholder="Ex: Dérivées & Intégrales" autofocus />
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" (click)="showEditCourseModal = false">Annuler</button>
+          <button class="btn-confirm" (click)="updateCourse()">Enregistrer</button>
         </div>
       </div>
     </div>

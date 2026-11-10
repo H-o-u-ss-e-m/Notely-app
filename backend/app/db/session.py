@@ -15,18 +15,21 @@ from app.core.config import settings
 
 DATABASE_URL = settings.DATABASE_URL
 
-connect_args = {}
-if "postgresql" in DATABASE_URL:
-    connect_args["connect_timeout"] = 2
+engine_kwargs = {"echo": False}
+if "sqlite" in DATABASE_URL:
+    from sqlalchemy.pool import StaticPool
+    engine_kwargs["connect_args"] = {"check_same_thread": False}
+    engine_kwargs["poolclass"] = StaticPool
+else:
+    connect_args = {}
+    if "postgresql" in DATABASE_URL:
+        connect_args["connect_timeout"] = 2
+    engine_kwargs["connect_args"] = connect_args
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_size"] = 10
+    engine_kwargs["max_overflow"] = 20
 
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,       # Vérifie la connexion avant utilisation
-    pool_size=10,
-    max_overflow=20,
-    connect_args=connect_args,
-    echo=False                # Mettre à True pour debug SQL
-)
+engine = create_engine(DATABASE_URL, **engine_kwargs)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

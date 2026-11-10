@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-export type SupportedLocale = 'fr' | 'en' | 'ar';
+export type SupportedLocale = 'fr' | 'en' | 'ar' | 'de';
 
 export interface Translations {
   actions: {
@@ -175,6 +175,49 @@ const AR_TRANSLATIONS: Translations = {
   }
 };
 
+const DE_TRANSLATIONS: Translations = {
+  actions: {
+    back: 'Zurück',
+    save: 'Speichern',
+    saveTooltip: 'Änderungen sofort auf dem Server speichern (Strg+S)',
+    exportPdf: 'PDF exportieren',
+    exportPdfTooltip: 'Aktuelle Lektion als PDF exportieren (original oder strukturiert)',
+    runOcr: 'Text erkennen',
+    runOcrRunning: 'Texterkennung läuft…',
+    runOcrTooltip: 'Handschriftliche Striche in bearbeitbaren Text umwandeln',
+    aiAssist: 'KI-Zusammenfassung & Karten',
+    aiAssistRunning: 'KI-Generierung läuft…',
+    aiAssistTooltip: 'Notizen strukturieren, Kernpunkte extrahieren und Lernkarten erstellen',
+    undo: 'Rückgängig (Strg+Z)',
+    redo: 'Wiederholen (Strg+Y)',
+    clear: 'Seite leeren',
+    newPage: '+ Seite',
+    deletePage: 'Seite löschen'
+  },
+  tools: {
+    pen: 'Stift',
+    penTooltip: 'Handschrift mit Stift oder Finger',
+    diagram: 'Diagramme',
+    diagramTooltip: 'Formen und Vektordiagramme zeichnen',
+    eraser: 'Radierer',
+    eraserTooltip: 'Berührte Striche löschen',
+    pan: 'Verschieben',
+    panTooltip: 'Über die Seite navigieren ohne zu zeichnen (Pan)'
+  },
+  saveStatus: {
+    saved: 'Gespeichert',
+    saving: 'Wird gespeichert…',
+    dirty: 'Ungespeicherte Änderungen',
+    error: 'Speichern fehlgeschlagen'
+  },
+  zoom: {
+    zoomIn: 'Vergrößern (+)',
+    zoomOut: 'Verkleinern (-)',
+    reset: 'Zoom zurücksetzen (100%)',
+    fitPage: 'An Seite anpassen'
+  }
+};
+
 @Injectable({
   providedIn: 'root'
 })
@@ -185,13 +228,14 @@ export class I18nService {
   private translations: Record<SupportedLocale, Translations> = {
     fr: FR_TRANSLATIONS,
     en: EN_TRANSLATIONS,
-    ar: AR_TRANSLATIONS
+    ar: AR_TRANSLATIONS,
+    de: DE_TRANSLATIONS
   };
 
   constructor() {
     if (typeof window !== 'undefined' && window.localStorage) {
       const saved = localStorage.getItem('notely_locale') as SupportedLocale;
-      if (saved && (saved === 'fr' || saved === 'en' || saved === 'ar')) {
+      if (saved && (saved === 'fr' || saved === 'en' || saved === 'ar' || saved === 'de')) {
         this.currentLocaleSubject.next(saved);
       }
     }

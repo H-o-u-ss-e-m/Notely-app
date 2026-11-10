@@ -134,6 +134,50 @@ export class StateService {
     return this.currentSubjectSubject.value;
   }
 
+  updateSubject(subjectId: string, name: string, color: string) {
+    this.apiService.updateSubject(subjectId, name, color).subscribe({
+      next: () => {
+        this.loadSubjects();
+        this.toastService.success('Espace modifié', `Espace "${name}" mis à jour.`);
+      },
+      error: () => this.toastService.error('Erreur', 'Impossible de modifier l\'espace.')
+    });
+  }
+
+  deleteSubject(subjectId: string, name: string) {
+    this.apiService.deleteSubject(subjectId).subscribe({
+      next: () => {
+        this.loadSubjects();
+        this.toastService.success('Espace supprimé', `L'espace "${name}" a été supprimé.`);
+      },
+      error: () => this.toastService.error('Erreur', 'Impossible de supprimer l\'espace.')
+    });
+  }
+
+  deleteLesson(subjectId: string, lessonId: string, title: string) {
+    this.apiService.deleteLesson(subjectId, lessonId).subscribe({
+      next: () => {
+        this.loadSubjects();
+        this.toastService.success('Cours supprimé', `Le cours "${title}" a été supprimé.`);
+      },
+      error: () => this.toastService.error('Erreur', 'Impossible de supprimer le cours.')
+    });
+  }
+
+  renameLesson(subjectId: string, lessonId: string, newTitle: string, pages: NotebookPage[] = []) {
+    this.apiService.updateLesson(subjectId, lessonId, newTitle, pages).subscribe({
+      next: (fresh) => {
+        this.loadSubjects();
+        const curLesson = this.currentLessonSubject.value;
+        if (curLesson && curLesson.id === lessonId) {
+          this.currentLessonSubject.next({ ...curLesson, title: newTitle });
+        }
+        this.toastService.success('Cours renommé', `Nouveau titre : "${newTitle}".`);
+      },
+      error: () => this.toastService.error('Erreur', 'Impossible de renommer le cours.')
+    });
+  }
+
   saveCurrentLesson(pages: NotebookPage[]): void {
     const subj = this.currentSubjectSubject.value;
     const les = this.currentLessonSubject.value;

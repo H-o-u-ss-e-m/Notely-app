@@ -48,18 +48,15 @@ async def lifespan(app: FastAPI):
     logger.info("=" * 70)
 
     # Vérification connexion PostgreSQL
-    if check_db_connection():
+    if settings.ENV in ("test", "ci"):
+        logger.info("ℹ️ Mode test/CI actif : démarrage en mode isolé sans blocage DB.")
+    elif check_db_connection():
         logger.info("✅ PostgreSQL connecté avec succès.")
-        # Créer les tables si elles n'existent pas encore (mode dev sans Alembic)
-        # create_all UNIQUEMENT en dev (confort). Staging/prod : `alembic upgrade head` obligatoire.
         if settings.ENV == "dev":
             Base.metadata.create_all(bind=engine, checkfirst=True)
     else:
-        if settings.ENV in ("test", "ci"):
-            logger.warning("⚠️ PostgreSQL non accessible en environnement de test : poursuite en mode isolé.")
-        else:
-            logger.error("❌ PostgreSQL INDISPONIBLE — L'application ne peut pas démarrer sans base de données.")
-            raise RuntimeError("PostgreSQL inaccessible. Vérifiez la variable DATABASE_URL et que PostgreSQL est démarré.")
+        logger.error("❌ PostgreSQL INDISPONIBLE — L'application ne peut pas démarrer sans base de données.")
+        raise RuntimeError("PostgreSQL inaccessible. Vérifiez la variable DATABASE_URL et que PostgreSQL est démarré.")
 
     # Chargement du moteur TrOCR (désactivable via SKIP_MODEL_LOAD ou en tests unitaires)
     skip_model = os.getenv("SKIP_MODEL_LOAD", "0").lower() in ("1", "true", "yes")

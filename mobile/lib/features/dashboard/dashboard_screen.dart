@@ -446,10 +446,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         'Espaces de Travail',
                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
-                      TextButton.icon(
-                        onPressed: _openNewSpaceDialog,
-                        icon: const Icon(Icons.add_circle_outline, size: 16, color: Color(0xFF818CF8)),
-                        label: const Text('Créer', style: TextStyle(color: Color(0xFF818CF8), fontWeight: FontWeight.bold, fontSize: 13)),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_selectedSubjectId != null) ...[
+                            IconButton(
+                              icon: const Icon(Icons.edit, size: 16, color: Color(0xFF818CF8)),
+                              tooltip: 'Modifier l'espace sélectionné',
+                              onPressed: () {
+                                final s = _subjects.firstWhere((item) => item.id == _selectedSubjectId);
+                                _openEditSpaceDialog(s);
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline, size: 16, color: Color(0xFFEF4444)),
+                              tooltip: 'Supprimer l'espace sélectionné',
+                              onPressed: () {
+                                final s = _subjects.firstWhere((item) => item.id == _selectedSubjectId);
+                                _confirmDeleteSpace(s);
+                              },
+                            ),
+                          ],
+                          TextButton.icon(
+                            onPressed: _openNewSpaceDialog,
+                            icon: const Icon(Icons.add_circle_outline, size: 16, color: Color(0xFF818CF8)),
+                            label: const Text('Créer', style: TextStyle(color: Color(0xFF818CF8), fontWeight: FontWeight.bold, fontSize: 13)),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -590,7 +613,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ],
                             ),
                           ),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF64748B)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert, size: 20, color: Color(0xFF94A3B8)),
+                                color: const Color(0xFF1E293B),
+                                tooltip: 'Options du cours',
+                                onSelected: (val) {
+                                  if (val == 'rename') {
+                                    _openRenameCourseDialog(subj, les);
+                                  } else if (val == 'delete') {
+                                    _confirmDeleteCourse(subj, les);
+                                  }
+                                },
+                                itemBuilder: (context) => const [
+                                  PopupMenuItem(
+                                    value: 'rename',
+                                    child: Row(children: [
+                                      Icon(Icons.edit, size: 16, color: Colors.blueAccent),
+                                      SizedBox(width: 8),
+                                      Text('Renommer', style: TextStyle(color: Colors.white, fontSize: 13)),
+                                    ]),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Row(children: [
+                                      Icon(Icons.delete_outline, size: 16, color: Colors.redAccent),
+                                      SizedBox(width: 8),
+                                      Text('Supprimer', style: TextStyle(color: Colors.redAccent, fontSize: 13)),
+                                    ]),
+                                  ),
+                                ],
+                              ),
+                              const Icon(Icons.arrow_forward_ios, size: 14, color: Color(0xFF64748B)),
+                            ],
+                          ),
                           onTap: () => _openCourse(subj, les),
                         ),
                       );
@@ -646,5 +704,230 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-}
 
+  // ── Méthodes CRUD Espaces & Cours (Parité Web/Mobile) ──────────────────────
+
+  void _openEditSpaceDialog(SubjectModel subject) {
+    final controller = TextEditingController(text: subject.name);
+    String selectedColor = subject.color;
+    final colors = ['#1E40AF', '#DC2626', '#15803D', '#7C3AED', '#D97706', '#0D9488'];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: const Color(0xFF1E293B),
+          title: const Text('Modifier l'Espace', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Nom de la matière ou catégorie :', style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8))),
+              const SizedBox(height: 6),
+              TextField(
+                controller: controller,
+                autofocus: true,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFF0F172A),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text('Couleur distinctive :', style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8))),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: colors.map((colHex) {
+                  final isSelected = selectedColor == colHex;
+                  final colorVal = Color(int.parse(colHex.replaceFirst('#', '0xFF')));
+                  return GestureDetector(
+                    onTap: () => setDialogState(() => selectedColor = colHex),
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? Colors.cyanAccent : Colors.transparent,
+                          width: 2,
+                        ),
+                      ),
+                      child: CircleAvatar(
+                        radius: 12,
+                        backgroundColor: colorVal,
+                        child: isSelected ? const Icon(Icons.check, size: 12, color: Colors.white) : null,
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Annuler', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF6366F1),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                final newName = controller.text.trim();
+                if (newName.isEmpty) return;
+                final ok = await ApiClient.updateSubject(subject.id, newName, selectedColor);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  if (ok) {
+                    _loadData();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Espace "$newName" modifié avec succès.')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Enregistrer'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteSpace(SubjectModel subject) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Supprimer l'Espace', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Voulez-vous vraiment supprimer l'espace "${subject.name}" et tous les cours qu'il contient ? Cette action est irréversible.',
+          style: const TextStyle(color: Color(0xFF94A3B8)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final ok = await ApiClient.deleteSubject(subject.id);
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (_selectedSubjectId == subject.id) {
+                  setState(() => _selectedSubjectId = null);
+                }
+                _loadData();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Espace "${subject.name}" supprimé.')),
+                );
+              }
+            },
+            child: const Text('Supprimer définitivement'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openRenameCourseDialog(SubjectModel subject, LessonModel lesson) {
+    final controller = TextEditingController(text: lesson.title);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Renommer le Cours', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Nouveau titre :', style: TextStyle(fontSize: 13, color: Color(0xFF94A3B8))),
+            const SizedBox(height: 6),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color(0xFF0F172A),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final newTitle = controller.text.trim();
+              if (newTitle.isEmpty) return;
+              final ok = await ApiClient.renameLesson(subject.id, lesson.id, newTitle);
+              if (context.mounted) {
+                Navigator.pop(context);
+                if (ok) {
+                  _loadData();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Cours renommé en "$newTitle".')),
+                  );
+                }
+              }
+            },
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDeleteCourse(SubjectModel subject, LessonModel lesson) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        title: const Text('Supprimer le Cours', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text(
+          'Voulez-vous vraiment supprimer le cours "${lesson.title}" ? Tous les tracés et notes associées seront effacés.',
+          style: const TextStyle(color: Color(0xFF94A3B8)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Annuler', style: TextStyle(color: Color(0xFF64748B))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () async {
+              final ok = await ApiClient.deleteLesson(subject.id, lesson.id);
+              if (context.mounted) {
+                Navigator.pop(context);
+                _loadData();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Cours "${lesson.title}" supprimé.')),
+                );
+              }
+            },
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+}

@@ -56,6 +56,14 @@ export class ApiService {
     return this.http.post<Subject>(`${this.baseUrl}/courses/subjects`, { name, color }, this.getAuthOptions());
   }
 
+  updateSubject(subjectId: string, name: string, color: string = "#1E40AF"): Observable<Subject> {
+    return this.http.put<Subject>(`${this.baseUrl}/courses/subjects/${subjectId}`, { name, color }, this.getAuthOptions());
+  }
+
+  deleteSubject(subjectId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/courses/subjects/${subjectId}`, this.getAuthOptions());
+  }
+
   createLesson(title: string, subjectId: string, pages: NotebookPage[]): Observable<Lesson> {
     return this.http.post<Lesson>(`${this.baseUrl}/courses/lessons`, {
       title,
@@ -74,6 +82,10 @@ export class ApiService {
       pages,
       pageCount: pages.length
     }, this.getAuthOptions());
+  }
+
+  deleteLesson(subjectId: string, lessonId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/courses/subjects/${subjectId}/lessons/${lessonId}`, this.getAuthOptions());
   }
 
   recognizeStructuralPages(pages: NotebookPage[], width: number, height: number, subject: string, lessonTitle: string, language: string = 'fr'): Observable<StructuralHTRResponse> {

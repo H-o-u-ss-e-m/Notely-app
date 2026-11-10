@@ -37,6 +37,8 @@ class LineMemory:
         self._redis_checked = False
 
     def _get_redis(self):
+        if os.getenv("ENV") in ("test", "ci"):
+            return None
         if not self._redis_checked:
             self._redis_checked = True
             redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")

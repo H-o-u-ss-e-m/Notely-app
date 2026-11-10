@@ -14,6 +14,9 @@ _redis_checked = False
 
 
 def _get_redis():
+    import os
+    if os.getenv("ENV") in ("test", "ci"):
+        return None
     global _redis_client, _redis_checked
     if _redis_checked:
         return _redis_client

@@ -66,6 +66,7 @@
         <option value="fr">🇫🇷 FR</option>
         <option value="en">🇬🇧 EN</option>
         <option value="ar">🇸🇦 AR</option>
+        <option value="de">🇩🇪 DE</option>
       </select>
 
       <button class="btn-action flashcard-btn" (click)="generateFlashcards()" [disabled]="isGeneratingCards" title="Générer des cartes de révision espacée (SM-2) depuis l'OCR">
@@ -99,6 +100,11 @@
       <button class="tool-btn lasso-btn" [class.active]="activeTool === 'lasso'" (click)="activeTool = 'lasso'" title="Lasso : encercler des tracés pour les sélectionner et déplacer">
         ✂️ Lasso
       </button>
+      @if (selectedLassoStrokes.length > 0) {
+        <button class="tool-btn btn-danger" (click)="deleteSelectedLassoStrokes()" title="Supprimer la sélection Lasso (Touche Suppr)">
+          🗑️ Effacer ({{ selectedLassoStrokes.length }})
+        </button>
+      }
       <!-- Option Rejet de paume / mode stylet seul (§4.4) -->
       <button class="tool-btn palm-btn" [class.active]="penOnlyMode" (click)="penOnlyMode = !penOnlyMode" title="Mode stylet seul : ignore la paume et les doigts sur l'écran tactile">
         🖐️ Rejet paume
