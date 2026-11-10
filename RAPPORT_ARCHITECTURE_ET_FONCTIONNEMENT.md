@@ -279,7 +279,7 @@ L'application mobile ([`mobile/`](mobile/)) est construite avec Flutter pour gar
 - [`notebook_painter.dart`](mobile/lib/features/notebook/widgets/notebook_painter.dart) : Utilise l'API Canvas Skia/Impeller de Flutter pour dessiner les traits avec lissage par courbes de Bézier quadratiques, affichage des motifs de page (Ligné, Quadrillé, Pointillés, Blanc) et tracé interactif de la sélection Lasso en pointillés.
 - **Outil Lasso & Sélection Polygonale** : Intègre l'algorithme Ray-Casting pour capturer collectivement les traits manuscrits et offre une barre d'actions rapide flottante pour couper ou supprimer les traits sélectionnés en un geste.
 - **Rejet de Paume (`penOnlyMode`)** : Quand l'utilisateur écrit avec un stylet actif (`PointerDeviceKind.stylus`), les contacts tactiles accidentels des doigts ou de la paume de la main sont ignorés.
-- **Gestion Complète des Espaces & Cours (CRUD)** : [`dashboard_screen.dart`](mobile/lib/features/dashboard/dashboard_screen.dart) intègre les modales d'édition du nom et de la couleur des espaces, ainsi que le renommage et la suppression de cours.
+- **Gestion des Espaces & Cours** : [`dashboard_screen.dart`](mobile/lib/features/dashboard/dashboard_screen.dart) intègre les modales d'édition du nom et de la couleur des espaces, ainsi que le renommage et la suppression de cours.
 
 ---
 

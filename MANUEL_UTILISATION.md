@@ -7,31 +7,33 @@ Ce guide décrit comment tester et utiliser l'application **Smart Notebook** en 
 ## 1. Démarrage Rapide des 3 Composants
 
 ### A. Backend FastAPI (Python)
-Dans une invite de commande Anaconda Prompt (environnement `ocr_hand`) ou PowerShell :
-```cmd
-cd C:\Users\rezgu\Desktop\Home\OCR_Manuscrit
-python ocr_handwritten.py
+Dans un terminal ou invite de commande :
+```bash
+cd backend
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 > **Serveur REST API disponible sur** : `http://localhost:8000/api/v1`
 
 ---
 
-### B. Interface Web Angular (PC / Laptop / Tablette)
-Dans une nouvelle invite de commande :
-```cmd
-cd C:\Users\rezgu\Desktop\Home\OCR_Manuscrit\front-angular
-ng serve -o
+### B. Interface Web Angular (Navigateur Web)
+Dans un second terminal :
+```bash
+cd front-angular
+npm start
 ```
 > **Application Web ouverte sur** : `http://localhost:4200`
 
 ---
 
-### C. Application Mobile Flutter (Téléphone Android branché en USB)
-Dans une troisième invite de commande avec débogage USB activé :
-```cmd
-"%LOCALAPPDATA%\Android\Sdk\platform-tools\adb.exe" reverse tcp:8000 tcp:8000
-cd C:\Users\rezgu\Desktop\Home\OCR_Manuscrit\mobile
-flutter run -d 23021RAA2Y
+### C. Application Mobile Flutter (Android / Navigateur)
+Dans un troisième terminal :
+```bash
+# Si test sur appareil Android USB :
+adb reverse tcp:8000 tcp:8000
+
+cd mobile
+flutter run
 ```
 
 ---
@@ -74,10 +76,10 @@ flutter run -d 23021RAA2Y
   - 🇸🇦 **Arabe** (`ar`) avec support bidirectionnel (RTL)
   - 🇩🇪 **Allemand** (`de`) avec support des umlauts et composés
 
-### G. Gestion des Matières et Cours (CRUD Complet) — *Nouveau (Web & Mobile)*
-- **Modifier un Espace / Matière** : Cliquez sur l'icône crayon `✏️` à côté du nom de l'espace pour modifier son titre ou lui attribuer une nouvelle couleur distinctive.
-- **Supprimer un Espace** : Cliquez sur l'icône poubelle `🗑️` pour supprimer l'espace et ses cours associés (avec modale de confirmation).
-- **Renommer ou Supprimer un Cours** : Sur chaque carte de cours, le menu d'options `⋮` permet de renommer le cours ou de le supprimer définitivement.
+### G. Organisation des Espaces et Cours
+- **Modifier un Espace** : Cliquez sur l'icône crayon `✏️` à côté du nom de l'espace pour modifier son titre ou lui attribuer une nouvelle couleur distinctive.
+- **Supprimer un Espace** : Cliquez sur l'icône poubelle `🗑️` pour supprimer l'espace et ses cours associés (avec confirmation).
+- **Renommer ou Supprimer un Cours** : Sur chaque carte de cours, le menu d'options `⋮` permet de renommer le cours ou de le supprimer.
 
 ---
 
